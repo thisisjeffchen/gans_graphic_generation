@@ -1,0 +1,174 @@
+loading annotations into memory...
+Done (t=22.66s)
+creating index...
+index created!
+loading annotations into memory...
+Done (t=0.65s)
+creating index...
+index created!
+***Training Set:***
+person 64115
+bicycle 3252
+car 12251
+motorcycle 3502
+airplane 2986
+bus 3952
+train 3588
+truck 6127
+boat 3025
+traffic light 4139
+fire hydrant 1711
+stop sign 1734
+parking meter 705
+bench 5570
+bird 3237
+cat 4114
+dog 4385
+horse 2941
+sheep 1529
+cow 1968
+elephant 2143
+bear 960
+zebra 1916
+giraffe 2546
+backpack 5528
+umbrella 3968
+handbag 6841
+tie 3810
+suitcase 2402
+frisbee 2184
+skis 3082
+snowboard 1654
+sports ball 4262
+kite 2261
+baseball bat 2506
+baseball glove 2629
+skateboard 3476
+surfboard 3486
+tennis racket 3394
+bottle 8501
+wine glass 2533
+cup 9189
+fork 3555
+knife 4326
+spoon 3529
+bowl 7111
+banana 2243
+apple 1586
+sandwich 2365
+orange 1699
+broccoli 1939
+carrot 1683
+hot dog 1222
+pizza 3166
+donut 1523
+cake 2925
+chair 12774
+couch 4423
+potted plant 4452
+bed 3682
+dining table 11837
+toilet 3353
+tv 4561
+laptop 3524
+mouse 1876
+remote 3076
+keyboard 2115
+cell phone 4803
+microwave 1547
+oven 2877
+toaster 217
+sink 4678
+refrigerator 2360
+book 5332
+clock 4659
+vase 3593
+scissors 947
+teddy bear 2140
+hair drier 189
+toothbrush 1007
+COCO supercategories: 
+outdoor food indoor appliance sports person animal vehicle furniture accessory electronic kitchen
+***Validation Set:***
+person 2693
+bicycle 149
+car 535
+motorcycle 159
+airplane 97
+bus 189
+train 157
+truck 250
+boat 121
+traffic light 191
+fire hydrant 86
+stop sign 69
+parking meter 37
+bench 235
+bird 125
+cat 184
+dog 177
+horse 128
+sheep 65
+cow 87
+elephant 89
+bear 49
+zebra 85
+giraffe 101
+backpack 228
+umbrella 174
+handbag 292
+tie 145
+suitcase 105
+frisbee 84
+skis 120
+snowboard 49
+sports ball 169
+kite 91
+baseball bat 97
+baseball glove 100
+skateboard 127
+surfboard 149
+tennis racket 167
+bottle 379
+wine glass 110
+cup 390
+fork 155
+knife 181
+spoon 153
+bowl 314
+banana 103
+apple 76
+sandwich 98
+orange 85
+broccoli 71
+carrot 81
+hot dog 51
+pizza 153
+donut 62
+cake 124
+chair 580
+couch 195
+potted plant 172
+bed 149
+dining table 501
+toilet 149
+tv 207
+laptop 183
+mouse 88
+remote 145
+keyboard 106
+cell phone 214
+microwave 54
+oven 115
+toaster 8
+sink 187
+refrigerator 101
+book 230
+clock 204
+vase 137
+scissors 28
+teddy bear 94
+hair drier 9
+toothbrush 34
+COCO supercategories: 
+outdoor food indoor appliance sports person animal vehicle furniture accessory electronic kitchen
