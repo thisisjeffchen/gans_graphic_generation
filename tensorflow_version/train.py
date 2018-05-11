@@ -72,6 +72,12 @@ def main():
         'caption_vector_length': args.caption_vector_length
     }
 
+    tbpath = "Output/{}".format(args.data_set)
+    if not os.path.isdir(tbpath):
+        os.makedirs(tbpath)
+    tbwriter = tf.summary.FileWriter(tbpath)
+
+
     gan = model.GAN(model_options)
     input_tensors, variables, loss, outputs, checks = gan.build_model()
 
@@ -135,6 +141,13 @@ def main():
                                           input_tensors['t_z']: z_noise,
                                       })
 
+            summary = tf.Summary(value=[tf.Summary.Value(tag="d_loss", simple_value=d_loss),
+                                        tf.Summary.Value(tag="d_loss1", simple_value=d1),
+                                        tf.Summary.Value(tag="d_loss2", simple_value=d2),
+                                        tf.Summary.Value(tag="d_loss3", simple_value=d3),
+                                        tf.Summary.Value(tag="g_loss", simple_value=g_loss)])
+            global_step = i * len(loaded_data['image_list']) / args.batch_size + batch_no
+            tbwriter.add_summary(summary, global_step)
             print("LOSSES", d_loss, g_loss, batch_no, i, len(loaded_data['image_list']) / args.batch_size)
             batch_no += 1
             if (batch_no % args.save_every) == 0:
