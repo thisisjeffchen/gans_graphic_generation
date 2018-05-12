@@ -58,7 +58,7 @@ def main():
                         help='Pre-Trained Model Path, to resume from')
 
     parser.add_argument('--data_set', type=str, default="flowers",
-                        help='Dat set: MS-COCO, flowers')
+                        help='Dat set: mscoco, flowers')
 
     args = parser.parse_args()
     model_options = {
@@ -146,9 +146,9 @@ def main():
                                         tf.Summary.Value(tag="d_loss2", simple_value=d2),
                                         tf.Summary.Value(tag="d_loss3", simple_value=d3),
                                         tf.Summary.Value(tag="g_loss", simple_value=g_loss)])
-            global_step = i * len(loaded_data['image_list']) / args.batch_size + batch_no
+            global_step = i * loaded_data['data_length'] / args.batch_size + batch_no
             tbwriter.add_summary(summary, global_step)
-            print("LOSSES", d_loss, g_loss, batch_no, i, len(loaded_data['image_list']) / args.batch_size)
+            print("LOSSES", d_loss, g_loss, batch_no, i, loaded_data['data_length'] / args.batch_size)
             batch_no += 1
             if (batch_no % args.save_every) == 0:
                 print("Saving Images, Model")
@@ -178,8 +178,8 @@ def load_training_data(data_dir, data_set):
         }
 
     else:
-        with open(join(data_dir, 'meta_train.pkl')) as f:
-            meta_data = pickle.load(f)
+        with open(join(data_dir, 'meta_train.pkl'), 'rb') as f:
+            meta_data = pickle.load(f, encoding='bytes')
         # No preloading for MS-COCO
         return meta_data
 
@@ -212,7 +212,7 @@ def get_training_batch(batch_no, batch_size, image_size, z_dim,
 
         image_files = []
         for idx, image_id in enumerate(image_ids):
-            image_file = join(data_dir, '%s2014/COCO_%s2014_%.12d.jpg' % (split, split, image_id))
+            image_file = join(data_dir, '{}2017'.format(split), '{}.jpg'.format(str(image_id).zfill(12)))
             image_array = image_processing.load_image_array(image_file, image_size)
             real_images[idx, :, :, :] = image_array
             image_files.append(image_file)

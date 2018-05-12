@@ -12,7 +12,7 @@ import h5py
 # DID NOT TRAIN IT ON MS COCO YET
 def save_caption_vectors_ms_coco(data_dir, split, batch_size):
     meta_data = {}
-    ic_file = join(data_dir, 'annotations/captions_{}2014.json'.format(split))
+    ic_file = join(data_dir, 'annotations/captions_{}2017.json'.format(split))
     with open(ic_file) as f:
         ic_data = json.loads(f.read())
 
@@ -49,7 +49,7 @@ def save_caption_vectors_ms_coco(data_dir, split, batch_size):
         batch_no += 1
 
 
-def save_caption_vectors_flowers(data_dir, args):
+def save_caption_vectors(data_dir, args):
     import time
 
     img_dir = join(data_dir, args.data_set + '/jpg')
@@ -60,7 +60,7 @@ def save_caption_vectors_flowers(data_dir, args):
 
     caption_dir = join(data_dir, args.data_set + '/text_c10')
     class_dirs = []
-    for d in os.listdir (caption_dir):
+    for d in os.listdir(caption_dir):
         class_dirs.append(join(caption_dir, d))
 
     for class_dir in class_dirs:
@@ -68,26 +68,41 @@ def save_caption_vectors_flowers(data_dir, args):
         for cap_file in caption_files:
             with open(join(class_dir, cap_file)) as f:
                 captions = f.read().split('\n')
-            img_file = cap_file.split ('.')[0] + ".jpg"
+            img_file = cap_file.split('.')[0] + ".jpg"
             # 5 captions per image
-            image_captions[img_file] += [cap for cap in captions if len(cap) > 0][0:5]
+            captions = [cap.strip() for cap in captions if len(cap.strip()) > 0][0:5]
+            image_captions[img_file] += captions
 
     print(len(image_captions))
 
+    img_batches = [[] for i in range(args.batch_size)]
+    caption_batches = [[] for i in range(args.batch_size)]
+    counter = 0
+    for img, captions in image_captions.items():
+        counter = counter % args.batch_size
+        img_batches[counter].append(img)
+        caption_batches[counter] += captions
+        counter +=1
+    print("batched")
+
     model = skipthoughts.load_model()
-    encoded_captions = {}
-
-    for i, img in enumerate(image_captions):
-        print ("Processing")
-        print(i, len(image_captions), img)
-        st = time.time()
-        encoded_captions[img] = skipthoughts.encode(model, image_captions[img])
-        print("Seconds", time.time() - st)
-        print("\n")
-
     h = h5py.File(join(data_dir, args.data_set + '_tv.hdf5'))
-    for key in encoded_captions:
-        h.create_dataset(key, data=encoded_captions[key])
+    for i in range(args.batch_size):
+        st = time.time()
+        imgs = img_batches[i]
+        captions = caption_batches[i]
+        encoded_captions = skipthoughts.encode(model, captions)
+
+        cstart = 0
+        for img in imgs:
+            num_caps = len(image_captions[img])
+            print(cstart, num_caps, len(encoded_captions))
+            h.create_dataset(img, data=encoded_captions[cstart:cstart+num_caps])
+            cstart += num_caps
+
+        print("Batch {} of {} Done".format(i, args.batch_size))
+        print("Seconds", time.time() - st)
+
     h.close()
 
 
@@ -98,12 +113,12 @@ def main():
     parser.add_argument('--data_dir', type=str, default='Data',
                         help='Data directory')
     parser.add_argument('--batch_size', type=int, default=64,
-                        help='Batch Size')
+                        help='a Size')
     parser.add_argument('--data_set', type=str, default='flowers',
                         help='Data Set : Flowers, MS-COCO')
     args = parser.parse_args()
 
-    save_caption_vectors_flowers(args.data_dir, args)
+    save_caption_vectors(args.data_dir, args)
     
 
 if __name__ == '__main__':
