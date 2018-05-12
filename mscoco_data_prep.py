@@ -7,7 +7,8 @@ import pdb
 from pycocotools.coco import COCO
 
 
-DATASET = "val"
+#DATASET = "val"
+DATASET = "train"
 
 def main ():
     #print_info ()
@@ -31,7 +32,7 @@ def prep_data ():
     cocoAnn = COCO (ANN_PATH)
     cocoCap = COCO (CAP_PATH)
 
-    catNames = ["person", "car", "airplane", "boat", "bus", "horse", "elephant",
+    catNames = ["car", "airplane", "boat", "bus", "horse", "elephant",
              "motorcycle", "tv", "refrigerator", "bear"]
 
     catIds = cocoAnn.getCatIds (catNames)
@@ -54,8 +55,9 @@ def prep_data ():
             anns = cocoCap.loadAnns (annIds)
             assert (len(anns) >= 5) #I think the rest of the code depends on 5 or more caps
             for ann in anns:
-                f.write (ann['caption'])
-                f.write ('\n')
+                if (ann['caption'].split () > 0):
+                    f.write (ann['caption'])
+                    f.write ('\n')
             f.close ()
         print "all captions present for " + catNames[idx]
 

@@ -78,10 +78,12 @@ def save_caption_vectors_flowers(data_dir, args):
     encoded_captions = {}
 
     for i, img in enumerate(image_captions):
+        print ("Processing")
+        print(i, len(image_captions), img)
         st = time.time()
         encoded_captions[img] = skipthoughts.encode(model, image_captions[img])
-        print(i, len(image_captions), img)
         print("Seconds", time.time() - st)
+        print("\n")
 
     h = h5py.File(join(data_dir, args.data_set + '_tv.hdf5'))
     for key in encoded_captions:
