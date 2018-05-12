@@ -63,7 +63,7 @@ def prep_data():
                     f.write (ann['caption'])
                     f.write ('\n')
             f.close ()
-        print "all captions present for " + catNames[idx]
+        print ("all captions present for " + catNames[idx])
 
 
 def print_info():
