@@ -1,5 +1,6 @@
 import sys
 import os
+from shutil import copyfile
 sys.path.append (os.path.abspath("cocoapi-master/PythonAPI"))
 import pdb
                  
@@ -18,27 +19,48 @@ def prep_data ():
     DATA_PATH = "tensorflow_version/Data/mscoco_raw/"
     ANN_PATH = DATA_PATH + "annotations/instances_" + DATASET + "2017.json"
     CAP_PATH = DATA_PATH + "annotations/captions_" + DATASET + "2017.json"
+    TARGET_DIR = "tensorflow_version/Data/mscoco/"
+    TARGET_DIR_IMAGES = TARGET_DIR + "jpg/"
+    TARGET_DIR_CAPS   = TARGET_DIR + "text_c10/"
+
+
+    os.mkdir (TARGET_DIR)
+    os.mkdir (TARGET_DIR_IMAGES)
+    os.mkdir (TARGET_DIR_CAPS)
 
     cocoAnn = COCO (ANN_PATH)
     cocoCap = COCO (CAP_PATH)
 
     catNames = ["person", "car", "airplane", "boat", "bus", "horse", "elephant",
-            "motorcycle", "tv", "refrigerator", "bear"]
+             "motorcycle", "tv", "refrigerator", "bear"]
 
     catIds = cocoAnn.getCatIds (catNames)
     assert (len(catIds) == len (catNames))
 
     for idx, catId in enumerate (catIds):
-        imgIds = coco.getImgIds (catIds = catId)
-        annIds = cocoCap.getAnnIds (imgIds = imgIds)
-        anns = cocoCap.loadAnns (annIds)
+        class_dir = "class_" + str(catId).zfill (5)
+        os.mkdir (TARGET_DIR_CAPS + class_dir)
 
-        assert (len ())
+        imgIds = cocoAnn.getImgIds (catIds = catId)
+
+        for i in imgIds:
+            src = DATA_PATH + DATASET + "2017/" + str(i).zfill (12) + ".jpg"
+            dest = TARGET_DIR_IMAGES + "image_" + str(i).zfill (12) + ".jpg"
+            copyfile (src, dest)
+
+            cap_file_path = TARGET_DIR_CAPS + class_dir + "/image_"+ str(i).zfill (12) + ".txt"
+            f = open (cap_file_path, "w")
+            annIds = cocoCap.getAnnIds (imgIds = i)
+            anns = cocoCap.loadAnns (annIds)
+            assert (len(anns) >= 5) #I think the rest of the code depends on 5 or more caps
+            for ann in anns:
+                f.write (ann['caption'])
+                f.write ('\n')
+            f.close ()
         print "all captions present for " + catNames[idx]
-        #TODO: save this
 
 
-
+'''Currently not used  '''
 def print_info ():
     DATA_PATH = "/home/shared/cs231n_data"
     TRAIN_INSTANCES_ANN = "annotations/instances_train2017.json"

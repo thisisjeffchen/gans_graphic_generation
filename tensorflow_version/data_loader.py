@@ -7,7 +7,6 @@ import pickle
 import argparse
 import skipthoughts
 import h5py
-import pdb
 
 
 # DID NOT TRAIN IT ON MS COCO YET
@@ -50,29 +49,26 @@ def save_caption_vectors_ms_coco(data_dir, split, batch_size):
         batch_no += 1
 
 
-def save_caption_vectors_flowers(data_dir):
+def save_caption_vectors_flowers(data_dir, args):
     import time
 
-    pdb.set_trace ()
-
-    img_dir = join(data_dir, 'flowers/jpg')
+    img_dir = join(data_dir, args.data_set + '/jpg')
     image_files = [f for f in os.listdir(img_dir) if 'jpg' in f]
     print(image_files[300:400])
-    print(len(image_files))
+    print("number of images: " + str(len(image_files)))
     image_captions = {img_file: [] for img_file in image_files}
 
-    caption_dir = join(data_dir, 'flowers/text_c10')
+    caption_dir = join(data_dir, args.data_set + '/text_c10')
     class_dirs = []
-    for i in range(1, 103):
-        class_dir_name = 'class_%.5d' % (i)
-        class_dirs.append(join(caption_dir, class_dir_name))
+    for d in os.listdir (caption_dir):
+        class_dirs.append(join(caption_dir, d))
 
     for class_dir in class_dirs:
         caption_files = [f for f in os.listdir(class_dir) if 'txt' in f]
         for cap_file in caption_files:
             with open(join(class_dir, cap_file)) as f:
                 captions = f.read().split('\n')
-            img_file = cap_file[0:11] + ".jpg"
+            img_file = cap_file.split ('.')[0] + ".jpg"
             # 5 captions per image
             image_captions[img_file] += [cap for cap in captions if len(cap) > 0][0:5]
 
@@ -87,14 +83,13 @@ def save_caption_vectors_flowers(data_dir):
         print(i, len(image_captions), img)
         print("Seconds", time.time() - st)
 
-    h = h5py.File(join(data_dir, 'flower_tv.hdf5'))
+    h = h5py.File(join(data_dir, args.data_set + '_tv.hdf5'))
     for key in encoded_captions:
         h.create_dataset(key, data=encoded_captions[key])
     h.close()
 
 
 def main():
-    pdb.set_trace ()
     parser = argparse.ArgumentParser()
     parser.add_argument('--split', type=str, default='train',
                         help='train/val')
@@ -106,11 +101,8 @@ def main():
                         help='Data Set : Flowers, MS-COCO')
     args = parser.parse_args()
 
-    if args.data_set == 'flowers':
-        save_caption_vectors_flowers(args.data_dir)
-    else:
-        save_caption_vectors_ms_coco(args.data_dir, args.split, args.batch_size)
-
+    save_caption_vectors_flowers(args.data_dir, args)
+    
 
 if __name__ == '__main__':
     main()
