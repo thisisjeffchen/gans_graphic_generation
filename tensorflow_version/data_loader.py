@@ -7,6 +7,7 @@ import pickle
 import argparse
 import skipthoughts
 import h5py
+import pdb
 
 
 # DID NOT TRAIN IT ON MS COCO YET
@@ -52,6 +53,8 @@ def save_caption_vectors_ms_coco(data_dir, split, batch_size):
 def save_caption_vectors_flowers(data_dir):
     import time
 
+    pdb.set_trace ()
+
     img_dir = join(data_dir, 'flowers/jpg')
     image_files = [f for f in os.listdir(img_dir) if 'jpg' in f]
     print(image_files[300:400])
@@ -91,6 +94,7 @@ def save_caption_vectors_flowers(data_dir):
 
 
 def main():
+    pdb.set_trace ()
     parser = argparse.ArgumentParser()
     parser.add_argument('--split', type=str, default='train',
                         help='train/val')
