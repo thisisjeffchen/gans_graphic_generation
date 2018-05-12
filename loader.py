@@ -1,10 +1,12 @@
 import sys
 import os
 sys.path.append (os.path.abspath("cocoapi-master/PythonAPI"))
+import pdb
                  
 from pycocotools.coco import COCO
 
 
+DATASET = "val"
 
 def main ():
     #print_info ()
@@ -12,25 +14,28 @@ def main ():
 
 
 def prep_data ():
-    DATA_PATH = "tensorflow_version/Data/mscoco/"
-    ds = {}
 
-    ds["val"] = COCO (DATA_PATH + "/" + "annotations/instances_val2017.json")
-    coco = ds["val"]
-    cocoCap = COCO (DATA_PATH + "/" + "annotations/captions_val2017.json")
+    DATA_PATH = "tensorflow_version/Data/mscoco_raw/"
+    ANN_PATH = DATA_PATH + "annotations/instances_" + DATASET + "2017.json"
+    CAP_PATH = DATA_PATH + "annotations/captions_" + DATASET + "2017.json"
 
-    CATS = ["person", "car", "airplane", "boat", "backpack", "chair", "cup",
-            "motorcycle", "knife", "dining table"]
+    cocoAnn = COCO (ANN_PATH)
+    cocoCap = COCO (CAP_PATH)
 
-    catIds = coco.getCatIds (CATS)
-    assert (len(catIds) == len (CATS))
+    catNames = ["person", "car", "airplane", "boat", "bus", "horse", "elephant",
+            "motorcycle", "tv", "refrigerator", "bear"]
 
-    for catId in catIds:
-        imgId = coco.getImgIds (catId)
-        annId = coco.getAnnIds (imgIDs = imgId)
-        cap  = cocoCap.get
+    catIds = cocoAnn.getCatIds (catNames)
+    assert (len(catIds) == len (catNames))
 
+    for idx, catId in enumerate (catIds):
+        imgIds = coco.getImgIds (catIds = catId)
+        annIds = cocoCap.getAnnIds (imgIds = imgIds)
+        anns = cocoCap.loadAnns (annIds)
 
+        assert (len ())
+        print "all captions present for " + catNames[idx]
+        #TODO: save this
 
 
 
