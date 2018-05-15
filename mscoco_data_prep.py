@@ -8,7 +8,7 @@ import pdb
 
 from pycocotools.coco import COCO
 
-DATASET = "train"
+DATASET = "val"
 
 
 def main():
@@ -20,7 +20,7 @@ def prep_data():
     DATA_PATH = "tensorflow_version/Data/mscoco_raw/"
     ANN_PATH = DATA_PATH + "annotations/instances_" + DATASET + "2017.json"
     CAP_PATH = DATA_PATH + "annotations/captions_" + DATASET + "2017.json"
-    TARGET_DIR = "tensorflow_version/Data/mscoco/"
+    TARGET_DIR = "tensorflow_version/Data/mscoco_val/"
     TARGET_DIR_IMAGES = TARGET_DIR + "jpg/"
     TARGET_DIR_CAPS = TARGET_DIR + "text_c10/"
 
@@ -49,21 +49,26 @@ def prep_data():
             if progress % 1000 == 0:
                 print("Processsed {} out of {} for class {}".format(progress, len(imgIds), catId))
 
-            src = DATA_PATH + DATASET + "2017/" + str(i).zfill(12) + ".jpg"
-            dest = TARGET_DIR_IMAGES + "image_" + str(i).zfill(12) + ".jpg"
-            copyfile(src, dest)
+            try:
+                src = DATA_PATH + DATASET + "2017/" + str(i).zfill(12) + ".jpg"
+                dest = TARGET_DIR_IMAGES + "image_" + str(i).zfill(12) + ".jpg"
+                copyfile(src, dest)
 
-            cap_file_path = TARGET_DIR_CAPS + class_dir + "/image_" + str(i).zfill(12) + ".txt"
-            f = open(cap_file_path, "w")
-            annIds = cocoCap.getAnnIds(imgIds=i)
-            anns = cocoCap.loadAnns(annIds)
-            assert (len(anns) >= 5)  # I think the rest of the code depends on 5 or more caps
-            for ann in anns:
-                if (ann['caption'].split () > 0):
-                    f.write (ann['caption'])
-                    f.write ('\n')
-            f.close ()
+                cap_file_path = TARGET_DIR_CAPS + class_dir + "/image_" + str(i).zfill(12) + ".txt"
+                f = open(cap_file_path, "w")
+                annIds = cocoCap.getAnnIds(imgIds=i)
+                anns = cocoCap.loadAnns(annIds)
+                assert (len(anns) >= 5)  # I think the rest of the code depends on 5 or more caps
+                for ann in anns:
+                    if (len(ann['caption'].strip().split()) > 0):
+                        f.write (ann['caption'])
+                        f.write ('\n')
+                f.close()
+            except FileNotFoundError:
+                print("Image {} not found".format(src))
         print ("all captions present for " + catNames[idx])
+
+
 
 
 def print_info():
@@ -98,6 +103,8 @@ def print_info():
 
         nms = set([cat['supercategory'] for cat in cats])
         print('COCO supercategories: \n{}'.format(' '.join(nms)))
+
+
 
 
 if __name__ == '__main__':
