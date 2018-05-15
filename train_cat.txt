@@ -1,0 +1,80 @@
+person 64115
+bicycle 3252
+car 12251
+motorcycle 3502
+airplane 2986
+bus 3952
+train 3588
+truck 6127
+boat 3025
+traffic light 4139
+fire hydrant 1711
+stop sign 1734
+parking meter 705
+bench 5570
+bird 3237
+cat 4114
+dog 4385
+horse 2941
+sheep 1529
+cow 1968
+elephant 2143
+bear 960
+zebra 1916
+giraffe 2546
+backpack 5528
+umbrella 3968
+handbag 6841
+tie 3810
+suitcase 2402
+frisbee 2184
+skis 3082
+snowboard 1654
+sports ball 4262
+kite 2261
+baseball bat 2506
+baseball glove 2629
+skateboard 3476
+surfboard 3486
+tennis racket 3394
+bottle 8501
+wine glass 2533
+cup 9189
+fork 3555
+knife 4326
+spoon 3529
+bowl 7111
+banana 2243
+apple 1586
+sandwich 2365
+orange 1699
+broccoli 1939
+carrot 1683
+hot dog 1222
+pizza 3166
+donut 1523
+cake 2925
+chair 12774
+couch 4423
+potted plant 4452
+bed 3682
+dining table 11837
+toilet 3353
+tv 4561
+laptop 3524
+mouse 1876
+remote 3076
+keyboard 2115
+cell phone 4803
+microwave 1547
+oven 2877
+toaster 217
+sink 4678
+refrigerator 2360
+book 5332
+clock 4659
+vase 3593
+scissors 947
+teddy bear 2140
+hair drier 189
+toothbrush 1007
