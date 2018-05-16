@@ -60,6 +60,9 @@ def main():
     parser.add_argument('--data_set', type=str, default="mscoco",
                         help='Dat set: mscoco, flowers')
 
+    parser.add_argument('--image_dir', type=str, default="Data/mscoco_raw/train2017",
+                        help='Dat set: mscoco, flowers')
+
     args = parser.parse_args()
     model_options = {
         'z_dim': args.z_dim,
@@ -93,7 +96,7 @@ def main():
     if args.resume_model:
         saver.restore(sess, args.resume_model)
 
-    loaded_data = load_training_data(args.data_dir, args.data_set)
+    loaded_data = load_training_data(args.data_dir, args.data_set, 'train')
 
     for i in range(args.epochs):
         batch_no = 0
@@ -104,7 +107,7 @@ def main():
                                                                                                   args.z_dim,
                                                                                                   args.caption_vector_length,
                                                                                                   'train',
-                                                                                                  args.data_dir,
+                                                                                                  args.image_dir,
                                                                                                   args.data_set,
                                                                                                   loaded_data)
 
@@ -158,8 +161,8 @@ def main():
             save_path = saver.save(sess, "Data/Models/model_after_{}_epoch_{}.ckpt".format(args.data_set, i))
 
 
-def load_training_data(data_dir, data_set):
-    h = h5py.File(join(data_dir, '{}_tv.hdf5'.format(data_set)))
+def load_training_data(data_dir, data_set, split):
+    h = h5py.File(join(data_dir, data_set, split, 'captions_tv.hdf5'))
     captions = {}
     for ds in h.items():
         captions[ds[0]] = np.array(ds[1])
@@ -192,7 +195,7 @@ def save_for_vis(data_dir, real_images, generated_images, image_files):
 
 
 def get_training_batch(batch_no, batch_size, image_size, z_dim,
-                       caption_vector_length, split, data_dir, data_set, loaded_data=None):
+                       caption_vector_length, split, image_dir, data_set, loaded_data=None):
 
     real_images = np.zeros((batch_size, 64, 64, 3))
     wrong_images = np.zeros((batch_size, 64, 64, 3))
@@ -202,13 +205,13 @@ def get_training_batch(batch_no, batch_size, image_size, z_dim,
     image_files = []
     for i in range(batch_no * batch_size, batch_no * batch_size + batch_size):
         idx = i % len(loaded_data['image_list'])
-        image_file = join(data_dir, '{}/jpg/'.format(data_set) + loaded_data['image_list'][idx])
+        image_file = join(image_dir, loaded_data['image_list'][idx])
         image_array = image_processing.load_image_array(image_file, image_size)
         real_images[cnt, :, :, :] = image_array
 
         # Improve this selection of wrong image
         wrong_image_id = random.randint(0, len(loaded_data['image_list']) - 1)
-        wrong_image_file = join(data_dir, '{}/jpg/'.format(data_set) + loaded_data['image_list'][wrong_image_id])
+        wrong_image_file = join(image_dir,  loaded_data['image_list'][wrong_image_id])
         wrong_image_array = image_processing.load_image_array(wrong_image_file, image_size)
         wrong_images[cnt, :, :, :] = wrong_image_array
 
