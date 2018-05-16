@@ -32,8 +32,9 @@ def prep_data():
     cocoCap = COCO(CAP_PATH)
 
 
-    catNames = ["car", "airplane", "boat", "bus", "horse", "elephant",
-             "motorcycle", "tv", "refrigerator", "bear"]
+    #catNames = ["car", "airplane", "boat", "bus", "horse", "elephant",
+    #"motorcycle", "tv", "refrigerator", "bear"]
+    catNames = ["elephant"]
 
     catIds = cocoAnn.getCatIds(catNames)
     assert (len(catIds) == len(catNames))
