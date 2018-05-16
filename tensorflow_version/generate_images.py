@@ -39,7 +39,7 @@ def main():
     parser.add_argument('--data_dir', type=str, default="Data",
                         help='Data Directory')
 
-    parser.add_argument('--model_path', type=str, default='Data/Models/latest_model_flowers_temp.ckpt',
+    parser.add_argument('--model_path', type=str, default='Data/Models/latest_model_mscoco_temp.ckpt',
                         help='Trained Model Path')
 
     parser.add_argument('--n_images', type=int, default=5,
