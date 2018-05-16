@@ -160,7 +160,7 @@ def main():
 
 def load_training_data(data_dir, data_set):
     if data_set == 'flowers':
-        h = h5py.File(join(data_dir, 'flower_tv.hdf5'))
+        h = h5py.File(join(data_dir, 'flowers_tv.hdf5'))
         flower_captions = {}
         for ds in h.items():
             flower_captions[ds[0]] = np.array(ds[1])
