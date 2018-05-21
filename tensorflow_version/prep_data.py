@@ -7,7 +7,7 @@ import h5py
 
 from pycocotools.coco import COCO
 
-CATEGORIES = ["person"]
+CATEGORIES = ["cake"]
 
 
 def prep_data(data_dir, split, target_dir):
@@ -57,7 +57,7 @@ def prep_data(data_dir, split, target_dir):
         print("all captions present for " + CATEGORIES[idx])
     return image_captions
 
-def save_caption_vectors(image_captions, target_dir, split, num_batches):
+def save_caption_vectors(image_captions, target_dir, split, num_batches, experiment):
     import time
     print("number of images: ",  len(image_captions))
 
@@ -72,7 +72,7 @@ def save_caption_vectors(image_captions, target_dir, split, num_batches):
         counter +=1
     print("batched")
 
-    h = h5py.File(os.path.join(target_dir, split, 'captions_tv.hdf5'))
+    h = h5py.File(os.path.join(target_dir, split, '{}_captions.hdf5'.format(experiment)))
     model = skipthoughts.load_model()
     for i in range(num_batches):
         st = time.time()
@@ -103,11 +103,14 @@ def main():
                         help='Target directory')
     parser.add_argument('--num_batches', type=int, default=64,
                         help='a Size')
+    parser.add_argument('--experiment', type=str, default="default",
+                        help='Experiment of dataset')
+
 
     args = parser.parse_args()
 
     image_captions = prep_data(args.data_dir, args.split, args.target_dir)
-    save_caption_vectors(image_captions, args.target_dir, args.split, args.num_batches)
+    save_caption_vectors(image_captions, args.target_dir, args.split, args.num_batches, args.experiment)
 
 
 
