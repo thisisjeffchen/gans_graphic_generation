@@ -73,7 +73,7 @@ def main():
     caption_image_dic = {}
     for cn, caption_vector in enumerate(caption_vectors):
         caption_images = []
-        z_noise = 6 * np.random.uniform(-1, 1, [args.n_images, args.z_dim])
+        z_noise = 1 * np.random.uniform(-1, 1, [args.n_images, args.z_dim])
         caption = [caption_vector[0:args.caption_vector_length]] * args.n_images
 
         [gen_image] = sess.run([outputs['generator']],
