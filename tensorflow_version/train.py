@@ -48,7 +48,7 @@ def main():
     parser.add_argument('--beta1', type=float, default=0.5,
                         help='Momentum for Adam Update')
 
-    parser.add_argument('--epochs', type=int, default=600,
+    parser.add_argument('--epochs', type=int, default=200,
                         help='Max number of epochs')
 
     parser.add_argument('--save_every', type=int, default=30,
@@ -57,11 +57,17 @@ def main():
     parser.add_argument('--resume_model', type=str, default=None,
                         help='Pre-Trained Model Path, to resume from')
 
+    parser.add_argument('--resume_epoch', type=int, default=0,
+                        help='Number of epochs already trained')
+
     parser.add_argument('--data_set', type=str, default="mscoco",
                         help='Dat set: mscoco, flowers')
 
     parser.add_argument('--image_dir', type=str, default="Data/mscoco_raw/train2017",
                         help='Dat set: mscoco, flowers')
+
+    parser.add_argument('--experiment', type=str, default="person",
+                        help='Experiment to save to and load captions for')
 
     args = parser.parse_args()
     model_options = {
@@ -75,7 +81,7 @@ def main():
         'caption_vector_length': args.caption_vector_length
     }
 
-    tbpath = "Data/Output/{}".format(args.data_set)
+    tbpath = "Data/Output/{}_{}".format(args.data_set, args.experiment)
     if not os.path.isdir(tbpath):
         os.makedirs(tbpath)
     tbwriter = tf.summary.FileWriter(tbpath)
@@ -96,9 +102,9 @@ def main():
     if args.resume_model:
         saver.restore(sess, args.resume_model)
 
-    loaded_data = load_training_data(args.data_dir, args.data_set, 'train')
+    loaded_data = load_training_data(args.data_dir, args.data_set, 'train', args.experiment)
 
-    for i in range(args.epochs):
+    for i in range(args.resume_epoch, args.epochs):
         batch_no = 0
         while batch_no * args.batch_size < loaded_data['data_length']:
             real_images, wrong_images, caption_vectors, z_noise, image_files = get_training_batch(batch_no,
@@ -151,18 +157,17 @@ def main():
                                         tf.Summary.Value(tag="g_loss", simple_value=g_loss)])
             global_step = i * loaded_data['data_length'] / args.batch_size + batch_no
             tbwriter.add_summary(summary, global_step)
-            print("LOSSES", d_loss, g_loss, batch_no, i, loaded_data['data_length'] / args.batch_size)
+            print("Epoch", i, "LOSSES", d_loss, g_loss, batch_no, i, loaded_data['data_length'] / args.batch_size)
             batch_no += 1
             if (batch_no % args.save_every) == 0:
                 print("Saving Images, Model")
                 save_for_vis(args.data_dir, real_images, gen, image_files)
-                save_path = saver.save(sess, "Data/Models/latest_model_{}_temp.ckpt".format(args.data_set))
-        if i % 5 == 0:
-            save_path = saver.save(sess, "Data/Models/model_after_{}_epoch_{}.ckpt".format(args.data_set, i))
+                saver.save(sess, "Data/Models/{}_{}/latest_temp.ckpt".format(args.data_set, args.experiment))
+            saver.save(sess, "Data/Models/{}_{}/checkpoint.ckpt".format(args.data_set, args.experiment), global_step=i)
 
 
-def load_training_data(data_dir, data_set, split):
-    h = h5py.File(join(data_dir, data_set, split, 'captions_tv.hdf5'))
+def load_training_data(data_dir, data_set, split, experiment):
+    h = h5py.File(join(data_dir, data_set, split, '{}_captions.hdf5'.format(experiment)))
     captions = {}
     for ds in h.items():
         captions[ds[0]] = np.array(ds[1])
