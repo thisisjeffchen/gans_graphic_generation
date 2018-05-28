@@ -2,15 +2,12 @@ import tensorflow as tf
 import numpy as np
 import model
 import argparse
-import pickle
 from os.path import join
 import h5py
 from Utils import image_processing
 import scipy.misc
 import random
-import json
 import os
-import shutil
 
 
 def main():
@@ -39,9 +36,6 @@ def main():
     parser.add_argument('--caption_vector_length', type=int, default=2400,
                         help='Caption Vector Length')
 
-    parser.add_argument('--data_dir', type=str, default="Data",
-                        help='Data Directory')
-
     parser.add_argument('--learning_rate', type=float, default=0.0002,
                         help='Learning Rate')
 
@@ -63,13 +57,10 @@ def main():
     parser.add_argument('--resume_epoch', type=int, default=0,
                         help='Number of epochs already trained')
 
-    parser.add_argument('--data_set', type=str, default="mscoco",
-                        help='Dat set: mscoco, flowers')
-
     parser.add_argument('--image_dir', type=str, default="Data/mscoco_raw/train2017",
                         help='Dat set: mscoco, flowers')
 
-    parser.add_argument('--experiment', type=str, default="person",
+    parser.add_argument('--experiment', type=str, default="default",
                         help='Experiment to save to and load captions for')
 
     args = parser.parse_args()
@@ -84,7 +75,10 @@ def main():
         'caption_vector_length': args.caption_vector_length
     }
 
-    tbpath = "Data/Output/{}_{}".format(args.data_set, args.experiment)
+    tbdir = "Data/Experiments/{}/".format(args.experiment)
+    tbpath = os.path.join(tbdir, "tensorboard")
+    if not os.path.isdir(tbdir):
+        os.makedirs(tbdir)
     if not os.path.isdir(tbpath):
         os.makedirs(tbpath)
     tbwriter = tf.summary.FileWriter(tbpath)
@@ -105,7 +99,7 @@ def main():
     if args.resume_model:
         saver.restore(sess, args.resume_model)
 
-    loaded_data = load_training_data(args.data_dir, args.data_set, 'train', args.experiment)
+    loaded_data = load_training_data('train', args.experiment)
 
     for i in range(args.resume_epoch, args.epochs + 1):
         batch_no = 0
@@ -115,9 +109,7 @@ def main():
                                                                                                   args.image_size,
                                                                                                   args.z_dim,
                                                                                                   args.caption_vector_length,
-                                                                                                  'train',
                                                                                                   args.image_dir,
-                                                                                                  args.data_set,
                                                                                                   loaded_data)
 
             # DISCR UPDATE
@@ -157,46 +149,41 @@ def main():
             batch_no += 1
             if (batch_no % args.save_every) == 0:
                 print("Saving Images, Model")
-                save_for_vis(args.data_dir, real_images, gen, image_files)
-                saver.save(sess, "Data/Models/{}_{}/latest_temp.ckpt".format(args.data_set, args.experiment))
-            saver.save(sess, "Data/Models/{}_{}/checkpoint.ckpt".format(args.data_set, args.experiment), global_step=i)
+                save_for_vis(args.experiment, real_images, gen, image_files)
+            saver.save(sess, "Data/Experiments/{}/model/checkpoint.ckpt".format(args.experiment), global_step=i)
 
 
-def load_training_data(data_dir, data_set, split, experiment):
-    h = h5py.File(join(data_dir, data_set, split, '{}_captions.hdf5'.format(experiment)))
+def load_training_data(split, experiment):
+    h = h5py.File(os.path.join("Data", "Experiments", experiment, '{}_captions.hdf5'.format(split)))
     captions = {}
     for ds in h.items():
         captions[ds[0]] = np.array(ds[1])
     image_list = [key for key in captions]
-    image_list.sort()
 
-    img_75 = int(len(image_list) * 0.75)
-    training_image_list = image_list[0:img_75]
-    random.shuffle(training_image_list)
+    random.shuffle(image_list)
 
     return {
-        'image_list': training_image_list,
+        'image_list': image_list,
         'captions': captions,
-        'data_length': len(training_image_list)
+        'data_length': len(image_list)
     }
 
 
-def save_for_vis(data_dir, real_images, generated_images, image_files):
-    shutil.rmtree(join(data_dir, 'samples'))
-    os.makedirs(join(data_dir, 'samples'))
+def save_for_vis(experiment, real_images, generated_images, image_files):
+    train_samples_path = "Data/Experiments/{}/train_samples".format(experiment)
+    if not os.path.isdir(train_samples_path):
+        os.makedirs(train_samples_path)
 
     for i in range(0, real_images.shape[0]):
-        real_image_255 = np.zeros((64, 64, 3), dtype=np.uint8)
         real_images_255 = (real_images[i, :, :, :])
-        scipy.misc.imsave(join(data_dir, 'samples/{}_{}.jpg'.format(i, os.path.split(os.path.splitext(image_files[i])[0])[-1])), real_images_255)
+        scipy.misc.imsave(join(train_samples_path, '{}_{}.jpg'.format(i, os.path.split(os.path.splitext(image_files[i])[0])[-1])), real_images_255)
 
-        fake_image_255 = np.zeros((64, 64, 3), dtype=np.uint8)
         fake_images_255 = (generated_images[i, :, :, :])
-        scipy.misc.imsave(join(data_dir, 'samples/fake_image_{}.jpg'.format(i)), fake_images_255)
+        scipy.misc.imsave(join(train_samples_path, 'fake_image_{}.jpg'.format(i)), fake_images_255)
 
 
 def get_training_batch(batch_no, batch_size, image_size, z_dim,
-                       caption_vector_length, split, image_dir, data_set, loaded_data=None):
+                       caption_vector_length, image_dir, loaded_data):
 
     real_images = np.zeros((batch_size, 64, 64, 3))
     wrong_images = np.zeros((batch_size, 64, 64, 3))
