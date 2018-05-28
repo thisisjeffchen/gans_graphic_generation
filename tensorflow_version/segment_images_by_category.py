@@ -5,12 +5,12 @@ import numpy as np
 
 from pycocotools.coco import COCO
 
-DEBUG = True
+DEBUG = False
 
 MSCOCO_RAW_DIR = "Data/mscoco_raw/"
 PROCESSED_DIR = os.path.join(MSCOCO_RAW_DIR, "processed")
 DISREGARDED_DIR = os.path.join(MSCOCO_RAW_DIR, "disregarded")
-THRESHOLD = 0.05
+THRESHOLD = 0.10
 
 if DEBUG:
   TRAIN_DIR = "Data/mscoco_raw/val2017/"
