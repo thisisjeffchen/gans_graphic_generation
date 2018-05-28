@@ -48,6 +48,9 @@ def main():
     parser.add_argument('--beta1', type=float, default=0.5,
                         help='Momentum for Adam Update')
 
+    parser.add_argument('--gen_updates', type=int, default=10,
+                        help='Generator updates per discriminator update')
+
     parser.add_argument('--epochs', type=int, default=200,
                         help='Max number of epochs')
 
@@ -104,7 +107,7 @@ def main():
 
     loaded_data = load_training_data(args.data_dir, args.data_set, 'train', args.experiment)
 
-    for i in range(args.resume_epoch, args.epochs):
+    for i in range(args.resume_epoch, args.epochs + 1):
         batch_no = 0
         while batch_no * args.batch_size < loaded_data['data_length']:
             real_images, wrong_images, caption_vectors, z_noise, image_files = get_training_batch(batch_no,
@@ -132,23 +135,16 @@ def main():
             print("d3", d3)
             print("D", d_loss)
 
-            # GEN UPDATE
-            _, g_loss, gen = sess.run([g_optim, loss['g_loss'], outputs['generator']],
-                                      feed_dict={
-                                          input_tensors['t_real_image']: real_images,
-                                          input_tensors['t_wrong_image']: wrong_images,
-                                          input_tensors['t_real_caption']: caption_vectors,
-                                          input_tensors['t_z']: z_noise,
-                                      })
-
-            # GEN UPDATE TWICE, to make sure d_loss does not go to 0
-            _, g_loss, gen = sess.run([g_optim, loss['g_loss'], outputs['generator']],
-                                      feed_dict={
-                                          input_tensors['t_real_image']: real_images,
-                                          input_tensors['t_wrong_image']: wrong_images,
-                                          input_tensors['t_real_caption']: caption_vectors,
-                                          input_tensors['t_z']: z_noise,
-                                      })
+            g_loss = None
+            for _ in range(args.gen_updates):
+                # GEN UPDATE
+                _, g_loss, gen = sess.run([g_optim, loss['g_loss'], outputs['generator']],
+                                          feed_dict={
+                                              input_tensors['t_real_image']: real_images,
+                                              input_tensors['t_wrong_image']: wrong_images,
+                                              input_tensors['t_real_caption']: caption_vectors,
+                                              input_tensors['t_z']: z_noise,
+                                          })
 
             summary = tf.Summary(value=[tf.Summary.Value(tag="d_loss", simple_value=d_loss),
                                         tf.Summary.Value(tag="d_loss1", simple_value=d1),
