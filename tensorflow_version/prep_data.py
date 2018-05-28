@@ -10,16 +10,16 @@ from pycocotools.coco import COCO
 CATEGORIES = ["elephant"] 
 
 
-def prep_data(data_dir, split, target_dir):
+def prep_data(data_dir, split, target_dir, experiment):
     ANN_PATH = os.path.join(data_dir, "annotations/instances_" + split + "2017.json")
     CAP_PATH = os.path.join(data_dir, "annotations/captions_" + split + "2017.json")
-    target_dir_split = os.path.join(target_dir, split)
-    TARGET_DIR_CAPS = os.path.join(target_dir_split, "captions")
+    target_dir_experiment = os.path.join(target_dir, experiment)
+    TARGET_DIR_CAPS = os.path.join(target_dir_experiment, "captions")
 
     if not os.path.isdir(target_dir):
         os.mkdir(target_dir)
-    if not os.path.isdir(target_dir_split):
-        os.mkdir(target_dir_split)
+    if not os.path.isdir(target_dir_experiment):
+        os.mkdir(target_dir_experiment)
     if not os.path.isdir(TARGET_DIR_CAPS):
         os.mkdir(TARGET_DIR_CAPS)
 
@@ -72,7 +72,7 @@ def save_caption_vectors(image_captions, target_dir, split, num_batches, experim
         counter +=1
     print("batched")
 
-    h = h5py.File(os.path.join(target_dir, split, '{}_captions.hdf5'.format(experiment)))
+    h = h5py.File(os.path.join(target_dir, experiment, '{}_captions.hdf5'.format(split)))
     model = skipthoughts.load_model()
     for i in range(num_batches):
         st = time.time()
@@ -99,8 +99,6 @@ def main():
                         help='train/val')
     parser.add_argument('--data_dir', type=str, default='Data/mscoco_raw/',
                         help='Data directory')
-    parser.add_argument('--target_dir', type=str, default='Data/mscoco/',
-                        help='Target directory')
     parser.add_argument('--num_batches', type=int, default=64,
                         help='a Size')
     parser.add_argument('--experiment', type=str, default="default",
@@ -109,8 +107,8 @@ def main():
 
     args = parser.parse_args()
 
-    image_captions = prep_data(args.data_dir, args.split, args.target_dir)
-    save_caption_vectors(image_captions, args.target_dir, args.split, args.num_batches, args.experiment)
+    image_captions = prep_data(args.data_dir, args.split, "Data/Experiments/", args.experiment)
+    save_caption_vectors(image_captions, "Data/Experiments/", args.split, args.num_batches, args.experiment)
 
 
 
