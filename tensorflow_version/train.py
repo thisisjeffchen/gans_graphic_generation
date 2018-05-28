@@ -57,7 +57,7 @@ def main():
     parser.add_argument('--resume_epoch', type=int, default=0,
                         help='Number of epochs already trained')
 
-    parser.add_argument('--image_dir', type=str, default="Data/mscoco_raw/train2017",
+    parser.add_argument('--image_dir', type=str, default="Data/mscoco_raw/processed",
                         help='Dat set: mscoco, flowers')
 
     parser.add_argument('--experiment', type=str, default="default",
@@ -155,8 +155,9 @@ def main():
 
 def load_training_data(split, experiment):
     h = h5py.File(os.path.join("Data", "Experiments", experiment, '{}_captions.hdf5'.format(split)))
+    class_name = list(h.keys())[0]
     captions = {}
-    for ds in h.items():
+    for ds in h[class_name].items():
         captions[ds[0]] = np.array(ds[1])
     image_list = [key for key in captions]
 
@@ -165,7 +166,8 @@ def load_training_data(split, experiment):
     return {
         'image_list': image_list,
         'captions': captions,
-        'data_length': len(image_list)
+        'data_length': len(image_list),
+        'class_name': class_name
     }
 
 
@@ -185,6 +187,8 @@ def save_for_vis(experiment, real_images, generated_images, image_files):
 def get_training_batch(batch_no, batch_size, image_size, z_dim,
                        caption_vector_length, image_dir, loaded_data):
 
+    processed_img_dir = os.path.join(image_dir, loaded_data['class_name'])
+
     real_images = np.zeros((batch_size, 64, 64, 3))
     wrong_images = np.zeros((batch_size, 64, 64, 3))
     captions = np.zeros((batch_size, caption_vector_length))
@@ -193,13 +197,13 @@ def get_training_batch(batch_no, batch_size, image_size, z_dim,
     image_files = []
     for i in range(batch_no * batch_size, batch_no * batch_size + batch_size):
         idx = i % len(loaded_data['image_list'])
-        image_file = join(image_dir, loaded_data['image_list'][idx])
+        image_file = join(processed_img_dir, loaded_data['image_list'][idx])
         image_array = image_processing.load_image_array(image_file, image_size)
         real_images[cnt, :, :, :] = image_array
 
         # Improve this selection of wrong image
         wrong_image_id = random.randint(0, len(loaded_data['image_list']) - 1)
-        wrong_image_file = join(image_dir,  loaded_data['image_list'][wrong_image_id])
+        wrong_image_file = join(processed_img_dir,  loaded_data['image_list'][wrong_image_id])
         wrong_image_array = image_processing.load_image_array(wrong_image_file, image_size)
         wrong_images[cnt, :, :, :] = wrong_image_array
 

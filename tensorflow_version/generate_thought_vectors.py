@@ -6,15 +6,19 @@ import h5py
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--caption_file', type=str, default='Data/sample_captions.txt',
-                        help='caption file')
-    parser.add_argument('--data_dir', type=str, default='Data',
-                        help='Data Directory')
-    parser.add_argument('--output_file', type=str, default='Data/sample_caption_vectors.hdf5',
-                        help='Output file location')
+    parser.add_argument('--experiment', type=str, default="default",
+                        help='Experiment of dataset')
 
     args = parser.parse_args()
-    with open(args.caption_file) as f:
+
+    data_dir = "Data/Experiments/{}".format(args.experiment)
+    if not os.path.isdir(data_dir):
+        os.mkdir(data_dir)
+
+    in_caption_file = os.path.join(data_dir, "sample_captions.txt")
+    out_caption_file = os.path.join(data_dir, "gen_captions.hdf5")
+
+    with open(in_caption_file) as f:
         captions = f.read().split('\n')
 
     captions = [cap for cap in captions if len(cap) > 0]
@@ -22,9 +26,9 @@ def main():
     model = skipthoughts.load_model()
     caption_vectors = skipthoughts.encode(model, captions)
 
-    if os.path.isfile(args.output_file):
-        os.remove(args.output_file)
-    h = h5py.File(args.output_file)
+    if os.path.isfile(out_caption_file):
+        os.remove(out_caption_file)
+    h = h5py.File(out_caption_file)
     h.create_dataset('vectors', data=caption_vectors)
     h.close()
 

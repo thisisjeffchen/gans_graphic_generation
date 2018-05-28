@@ -36,17 +36,14 @@ def main():
     parser.add_argument('--caption_vector_length', type=int, default=2400,
                         help='Caption Vector Length')
 
-    parser.add_argument('--data_dir', type=str, default="Data",
-                        help='Data Directory')
-
-    parser.add_argument('--model_path', type=str, default='Data/Models/latest_model_mscoco_temp.ckpt',
-                        help='Trained Model Path')
-
-    parser.add_argument('--n_images', type=int, default=5,
+    parser.add_argument('--n_images', type=int, default=4,
                         help='Number of Images per Caption')
 
-    parser.add_argument('--caption_thought_vectors', type=str, default='Data/sample_caption_vectors.hdf5',
-                        help='Caption Thought Vector File')
+    parser.add_argument('--split', type=str, default='gen',
+                        help='train/val/test/gen')
+
+    parser.add_argument('--experiment', type=str, default="default",
+                        help='Experiment of dataset')
 
     args = parser.parse_args()
     model_options = {
@@ -60,15 +57,20 @@ def main():
         'caption_vector_length': args.caption_vector_length
     }
 
+    data_dir = os.path.join("Data", "Experiments", "{}".format(args.experiment))
+    model_path = os.path.join(data_dir, "model", "checkpoint.ckpt")
+    caption_thought_vectors = os.path.join(data_dir,  '{}_captions.hdf5'.format(args.split))
+    save_dir = os.path.join(data_dir, "{}_samples".format(args.split))
+
     gan = model.GAN(model_options)
     _, _, _, _, _ = gan.build_model()
     sess = tf.InteractiveSession()
     saver = tf.train.Saver()
-    saver.restore(sess, args.model_path)
+    saver.restore(sess, model_path)
 
     input_tensors, outputs = gan.build_generator()
 
-    h = h5py.File(args.caption_thought_vectors)
+    h = h5py.File(caption_thought_vectors)
     caption_vectors = np.array(h['vectors'])
     caption_image_dic = {}
     for cn, caption_vector in enumerate(caption_vectors):
@@ -86,19 +88,17 @@ def main():
         caption_image_dic[cn] = caption_images
         print("Generated", cn)
 
-    for f in os.listdir(join(args.data_dir, 'val_samples')):
+    for f in os.listdir(save_dir):
         if os.path.isfile(f):
-            os.unlink(join(args.data_dir, 'val_samples/' + f))
+            os.remove(f)
 
     for cn in range(0, len(caption_vectors)):
         caption_images = []
         for i, im in enumerate(caption_image_dic[cn]):
-            # im_name = "caption_{}_{}.jpg".format(cn, i)
-            # scipy.misc.imsave( join(args.data_dir, 'val_samples/{}'.format(im_name)) , im)
             caption_images.append(im)
             caption_images.append(np.zeros((64, 5, 3)))
         combined_image = np.concatenate(caption_images[0:-1], axis=1)
-        scipy.misc.imsave(join(args.data_dir, 'val_samples/combined_image_{}.jpg'.format(cn)), combined_image)
+        scipy.misc.imsave(join(save_dir, 'combined_image_{}.jpg'.format(cn)), combined_image)
 
 
 if __name__ == '__main__':
