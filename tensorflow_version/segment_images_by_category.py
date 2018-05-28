@@ -10,7 +10,7 @@ DEBUG = False
 MSCOCO_RAW_DIR = "Data/mscoco_raw/"
 PROCESSED_DIR = os.path.join(MSCOCO_RAW_DIR, "processed")
 DISREGARDED_DIR = os.path.join(MSCOCO_RAW_DIR, "disregarded")
-THRESHOLD = 0.10
+THRESHOLD = 0.7
 
 if DEBUG:
   TRAIN_DIR = "Data/mscoco_raw/val2017/"
