@@ -7,7 +7,7 @@ import h5py
 
 from pycocotools.coco import COCO
 
-CATEGORIES = ["cake"]
+CATEGORIES = ["elephant"] 
 
 
 def prep_data(data_dir, split, target_dir):
