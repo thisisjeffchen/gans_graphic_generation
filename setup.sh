@@ -12,6 +12,8 @@ pip3 install h5py nltk numpy scipy scikit_image  Theano tensorflow-gpu
 
 
 cd cocoapi-master/PythonAPI
-make
+sudo make
+sudo make install
+sudo python setup.py install
 
 cd ../../
