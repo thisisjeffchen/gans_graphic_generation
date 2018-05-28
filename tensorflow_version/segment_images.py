@@ -5,11 +5,16 @@ import cv2
 
 import pycocotools.coco as coco
 
-mycoco = coco.COCO('annotations/instances_val2017.json')
+mycoco = coco.COCO('annotations/instances_train2017.json')
 
 annotations = {}
 
 with open('annotations/instances_val2017.json') as f:
+  data = json.load(f)
+  for anno in data['annotations']:
+    annotations[int(anno['image_id'])] = anno
+
+with open('annotations/instances_train2017.json') as f:
   data = json.load(f)
   for anno in data['annotations']:
     annotations[int(anno['image_id'])] = anno
@@ -29,6 +34,8 @@ for filename in os.listdir('./train2017'):
     img[mycoco.annToMask(annotations[img_id]) == 0] = [255, 255, 255]
     cv2.imwrite('./processed' + '/' + filename, img)
     pics_processed += 1
+    if pics_processed % 1000 == 0:
+      print('finished: ', pics_processed)
 
 print('Total pictures processed:', pics_processed)
 print('Total pictures skipped:', pics_skipped)
