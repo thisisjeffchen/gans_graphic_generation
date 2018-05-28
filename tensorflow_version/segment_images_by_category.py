@@ -5,7 +5,7 @@ import numpy as np
 
 from pycocotools.coco import COCO
 
-DEBUG = True
+DEBUG = False
 
 MSCOCO_RAW_DIR = "Data/mscoco_raw/"
 PROCESSED_DIR = os.path.join(MSCOCO_RAW_DIR, "processed")
