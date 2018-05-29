@@ -65,11 +65,17 @@ for i, cat in enumerate(cats):
             num_total = img.shape[0] * img.shape[1] * img.shape[2]
             percent_subject = 1.0 - (num_white * 1.0 / num_total)
 
+            # compute crop dimensions for subject
+            rows = np.any(img-255, axis=1)
+            cols = np.any(img-255, axis=0)
+            rmin, rmax = np.where(rows)[0][[0, -1]]
+            cmin, cmax = np.where(cols)[0][[0, -1]]
+
             if percent_subject >= THRESHOLD:
-                cv2.imwrite(os.path.join(class_dir_processed, filename), img)
+                cv2.imwrite(os.path.join(class_dir_processed, filename), img[rmin:rmax, cmin:cmax])
                 pics_processed += 1
             else:
-                cv2.imwrite(os.path.join(class_dir_disregarded, filename), img)
+                cv2.imwrite(os.path.join(class_dir_disregarded, filename), img[rmin:rmax, cmin:cmax])
                 pics_disregarded += 1
 
 print('Total pictures processed:', pics_processed)
