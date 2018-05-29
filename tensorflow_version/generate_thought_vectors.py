@@ -17,7 +17,7 @@ def main():
         os.mkdir(data_dir)
 
     #copy over caption file into experiment directory
-    h = h5py.File(os.path.join("Data", "Experiments", experiment, '{}_captions.hdf5'.format(split)))
+    h = h5py.File(os.path.join("Data", "Experiments", args.experiment, '{}_captions.hdf5'.format(split)))
     class_name = list(h.keys())[0]
     h.close ()
 
