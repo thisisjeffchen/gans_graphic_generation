@@ -2,13 +2,9 @@ import tensorflow as tf
 import numpy as np
 import model
 import argparse
-import pickle
 from os.path import join
 import h5py
-from Utils import image_processing
 import scipy.misc
-import random
-import json
 import os
 
 
@@ -72,22 +68,33 @@ def main():
     input_tensors, outputs = gan.build_generator()
 
     h = h5py.File(caption_thought_vectors)
-    caption_vectors = np.array(h['vectors'])
-    caption_image_dic = {}
-    for cn, caption_vector in enumerate(caption_vectors):
-        caption_images = []
-        z_noise = 1 * np.random.uniform(-1, 1, [args.n_images, args.z_dim])
-        caption = [caption_vector[0:args.caption_vector_length]] * args.n_images
+    caption_vectors = {}
+    if args.split == 'gen':
+        caption_vectors["generated"] = np.array(h['vectors'])
+    else:
+        class_name = list(h.keys())[0]
+        for img_file, vector in h[class_name].items():
+            img_id = os.path.splitext(img_file)[0]
+            caption_vectors[img_id] = np.array(vector)
 
-        [gen_image] = sess.run([outputs['generator']],
-                               feed_dict={
-                                   input_tensors['t_real_caption']: caption,
-                                   input_tensors['t_z']: z_noise,
-                               })
+    generated_images = {}
+    for img_id, vectors in caption_vectors.items():
+        caption_image_dic = {}
+        for cn, caption_vector in enumerate(vectors):
+            caption_images = []
+            z_noise = 1 * np.random.uniform(-1, 1, [args.n_images, args.z_dim])
+            caption = [caption_vector[0:args.caption_vector_length]] * args.n_images
 
-        caption_images = [gen_image[i, :, :, :] for i in range(0, args.n_images)]
-        caption_image_dic[cn] = caption_images
-        print("Generated", cn)
+            [gen_image] = sess.run([outputs['generator']],
+                                   feed_dict={
+                                       input_tensors['t_real_caption']: caption,
+                                       input_tensors['t_z']: z_noise,
+                                   })
+
+            caption_images = [gen_image[i, :, :, :] for i in range(0, args.n_images)]
+            caption_image_dic[cn] = caption_images
+            print("Generated {} images for {}".format(cn, img_id))
+        generated_images[img_id] = caption_image_dic
 
     if not os.path.isdir(save_dir):
         os.mkdir(save_dir)
@@ -96,13 +103,14 @@ def main():
         if os.path.isfile(f):
             os.remove(f)
 
-    for cn in range(0, len(caption_vectors)):
-        caption_images = []
-        for i, im in enumerate(caption_image_dic[cn]):
-            caption_images.append(im)
-            caption_images.append(np.zeros((64, 5, 3)))
-        combined_image = np.concatenate(caption_images[0:-1], axis=1)
-        scipy.misc.imsave(join(save_dir, 'combined_image_{}.jpg'.format(cn)), combined_image)
+    for img_id, caption_image_dic in generated_images.items():
+        for cn, images in caption_image_dic.items():
+            caption_images = []
+            for i, im in enumerate(images):
+                caption_images.append(im)
+                caption_images.append(np.zeros((64, 5, 3)))
+            combined_image = np.concatenate(caption_images[0:-1], axis=1)
+            scipy.misc.imsave(join(save_dir, '{}_image_{}.jpg'.format(img_id, cn)), combined_image)
 
 
 if __name__ == '__main__':

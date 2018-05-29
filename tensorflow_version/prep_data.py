@@ -33,6 +33,7 @@ def prep_data(data_dir, split, target_dir, experiment, category):
     if not os.path.isdir(class_dir):
         os.mkdir(class_dir)
 
+    skipped_imgs = 0
     imgIds = cocoAnn.getImgIds(catIds=catId)
 
     for progress, i in enumerate(imgIds):
@@ -42,6 +43,7 @@ def prep_data(data_dir, split, target_dir, experiment, category):
         img_file = os.path.join(data_dir, "processed", class_name, "{}.jpg".format(str(i).zfill(12)))
         if not os.path.isfile(img_file):
             print("Image {} not found".format(img_file))
+            skipped_imgs += 1
         else:
             cap_file_path = os.path.join(class_dir,  str(i).zfill(12) + ".txt")
             with open(cap_file_path, "w") as f:
@@ -52,6 +54,7 @@ def prep_data(data_dir, split, target_dir, experiment, category):
                         f.write(cap)
                         f.write('\n')
                         image_captions[str(i).zfill(12)+".jpg"].append(cap)
+    print("Skipped {} missing images for {}".format(skipped_imgs, category))
     print("all captions present for " + category)
     return image_captions, class_name
 
