@@ -26,7 +26,14 @@ for filename in os.listdir(PROCESSED_DIR):
     num_processed += 1
 
     if percent_subject >= THRESHOLD:
-        copyfile(os.path.join(PROCESSED_DIR, filename), os.path.join(OUTPUT_DIR, filename))
+      # subject is large enough, so crop and save to new location
+      rows = np.any(img-255, axis=1)
+      cols = np.any(img-255, axis=0)
+      rmin, rmax = np.where(rows)[0][[0, -1]]
+      cmin, cmax = np.where(cols)[0][[0, -1]]
+      # reload the image because existing is grayscale
+      img = cv2.imread(os.path.join(PROCESSED_DIR, filename))
+      cv2.imwrite(os.path.join(OUTPUT_DIR, filename), img[rmin:rmax, cmin:cmax])
     else:
         num_excluded += 1
 
