@@ -2,11 +2,12 @@ import os
 import argparse
 import skipthoughts
 import h5py
+from shutil import copyfile
 
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--experiment', type=str, default="default",
+    parser.add_argument('--Experiment', type=str, default="default",
                         help='Experiment of dataset')
 
     args = parser.parse_args()
@@ -15,7 +16,18 @@ def main():
     if not os.path.isdir(data_dir):
         os.mkdir(data_dir)
 
-    in_caption_file = os.path.join(data_dir, "sample_captions.txt")
+    #copy over caption file into experiment directory
+    h = h5py.File(os.path.join("Data", "Experiments", experiment, '{}_captions.hdf5'.format(split)))
+    class_name = list(h.keys())[0]
+    h.close ()
+
+    filename = class_name + ".txt"
+    src = os.path.join ("DefaultCaptions/", filename)
+    dst = os.path.join (data_dir, filename)
+    copyfile(src, dst)
+
+
+    in_caption_file = os.path.join(data_dir, filename)
     out_caption_file = os.path.join(data_dir, "gen_captions.hdf5")
 
     with open(in_caption_file) as f:

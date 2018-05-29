@@ -163,6 +163,8 @@ def load_training_data(split, experiment):
 
     random.shuffle(image_list)
 
+    h.close ()
+
     return {
         'image_list': image_list,
         'captions': captions,
