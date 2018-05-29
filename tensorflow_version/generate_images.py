@@ -58,7 +58,7 @@ def main():
     }
 
     data_dir = os.path.join("Data", "Experiments", "{}".format(args.experiment))
-    model_path = os.path.join(data_dir, "model", "checkpoint.ckpt")
+    model_path = os.path.join(data_dir, "model")
     caption_thought_vectors = os.path.join(data_dir,  '{}_captions.hdf5'.format(args.split))
     save_dir = os.path.join(data_dir, "{}_samples".format(args.split))
 
@@ -66,7 +66,8 @@ def main():
     _, _, _, _, _ = gan.build_model()
     sess = tf.InteractiveSession()
     saver = tf.train.Saver()
-    saver.restore(sess, model_path)
+    latest_checkpoint = tf.train.latest_checkpoint(model_path)
+    saver.restore(sess, latest_checkpoint)
 
     input_tensors, outputs = gan.build_generator()
 
@@ -87,6 +88,9 @@ def main():
         caption_images = [gen_image[i, :, :, :] for i in range(0, args.n_images)]
         caption_image_dic[cn] = caption_images
         print("Generated", cn)
+
+    if not os.path.isdir(save_dir):
+        os.mkdir(save_dir)
 
     for f in os.listdir(save_dir):
         if os.path.isfile(f):
