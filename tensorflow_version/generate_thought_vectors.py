@@ -7,7 +7,7 @@ from shutil import copyfile
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--Experiment', type=str, default="default",
+    parser.add_argument('--experiment', type=str, default="default",
                         help='Experiment of dataset')
 
     args = parser.parse_args()
