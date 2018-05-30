@@ -42,6 +42,9 @@ def main():
     parser.add_argument('--experiment', type=str, default="default",
                         help='Experiment of dataset')
 
+    parser.add_argument('--epoch', type=int, default=None,
+                        help='Epoch of the trained model to load. Defaults to latest checkpoint')
+
     args = parser.parse_args()
     model_options = {
         'z_dim': args.z_dim,
@@ -55,16 +58,23 @@ def main():
     }
 
     data_dir = os.path.join("Data", "Experiments", "{}".format(args.experiment))
-    model_path = os.path.join(data_dir, "model")
     caption_thought_vectors = os.path.join(data_dir,  '{}_captions.hdf5'.format(args.split))
     save_dir = os.path.join(data_dir, "{}_samples".format(args.split))
+
+
+    model_path = os.path.join(data_dir, "model")
+    checkpoint = tf.train.latest_checkpoint(model_path)
+    if args.epoch is not None:
+        checkpoint = os.path.join(model_path, "after_{}_epochs.ckpt".format(args.epoch))
+        save_dir = os.path.join(save_dir, "epoch_{}".format(args.epoch))
+    else:
+        save_dir = os.path.join(save_dir, "latest".format(args.epoch))
 
     gan = model.GAN(model_options)
     _, _, _, _, _ = gan.build_model()
     sess = tf.InteractiveSession()
     saver = tf.train.Saver()
-    latest_checkpoint = tf.train.latest_checkpoint(model_path)
-    saver.restore(sess, latest_checkpoint)
+    saver.restore(sess, checkpoint)
 
     input_tensors, outputs = gan.build_generator()
 
@@ -97,10 +107,10 @@ def main():
             print("Generated {} images for {}".format(cn, img_id))
         generated_images[img_id] = caption_image_dic
 
-    if os.path.isdir (save_dir):
-        shutil.rmtree (save_dir)
+    if os.path.isdir(save_dir):
+        shutil.rmtree(save_dir)
 
-    os.mkdir(save_dir)
+    os.makedirs(save_dir, exist_ok=True)
 
     for img_id, caption_image_dic in generated_images.items():
         for cn, images in caption_image_dic.items():
