@@ -97,14 +97,10 @@ def main():
             print("Generated {} images for {}".format(cn, img_id))
         generated_images[img_id] = caption_image_dic
 
-    shutil.rmtree (save_dir)
+    if os.path.isdir (save_dir):
+        shutil.rmtree (save_dir)
 
-    if not os.path.isdir(save_dir):
-        os.mkdir(save_dir)
-
-    for f in os.listdir(save_dir):
-        if os.path.isfile(f):
-            os.remove(f)
+    os.mkdir(save_dir)
 
     for img_id, caption_image_dic in generated_images.items():
         for cn, images in caption_image_dic.items():
