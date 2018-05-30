@@ -6,11 +6,17 @@ import numpy as np
 from pycocotools.coco import COCO
 
 DEBUG = False
+CROP = True
 
 MSCOCO_RAW_DIR = "Data/mscoco_raw/"
-PROCESSED_DIR = os.path.join(MSCOCO_RAW_DIR, "processed")
+if CROP:
+    PROCESSED_DIR = os.path.join(MSCOCO_RAW_DIR, "processed_cropped")
+else:
+    PROCESSED_DIR = os.path.join(MSCOCO_RAW_DIR, "processed_segmented")
+
 DISREGARDED_DIR = os.path.join(MSCOCO_RAW_DIR, "disregarded")
 THRESHOLD = 0.07
+WHITE=[255,255,255]
 
 if DEBUG:
     TRAIN_DIR = "Data/mscoco_raw/val2017/"
@@ -68,17 +74,26 @@ for i, cat in enumerate(cats):
             num_total = img.shape[0] * img.shape[1] * img.shape[2]
             percent_subject = 1.0 - (num_white * 1.0 / num_total)
 
-            # compute crop dimensions for subject
-            rows = np.any(img-255, axis=1)
-            cols = np.any(img-255, axis=0)
-            rmin, rmax = np.where(rows)[0][[0, -1]]
-            cmin, cmax = np.where(cols)[0][[0, -1]]
+            if CROP:
+                # compute crop dimensions for subject
+                rows = np.any(img-255, axis=1)
+                cols = np.any(img-255, axis=0)
+                rmin, rmax = np.where(rows)[0][[0, -1]]
+                cmin, cmax = np.where(cols)[0][[0, -1]]
+                size = max(rmax - rmin, cmax - cmin)
+                vertical_pad = (size - (rmax-rmin)) / 2
+                horizontal_pad = (size - (cmax-cmin)) / 2
+                img = cv2.copyMakeBorder(
+                    img[rmin:rmax, cmin:cmax],
+                    vertical_pad, vertical_pad, horizontal_pad, horizontal_pad,
+                    cv2.BORDER_CONSTANT, value=WHITE)
 
             if percent_subject >= THRESHOLD:
-                cv2.imwrite(os.path.join(class_dir_processed, filename), img[rmin:rmax, cmin:cmax])
+                 
+                cv2.imwrite(os.path.join(class_dir_processed, filename), img)
                 pics_processed += 1
             else:
-                cv2.imwrite(os.path.join(class_dir_disregarded, filename), img[rmin:rmax, cmin:cmax])
+                cv2.imwrite(os.path.join(class_dir_disregarded, filename), img)
                 pics_disregarded += 1
 
 print('Total pictures processed:', pics_processed)
