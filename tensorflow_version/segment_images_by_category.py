@@ -51,6 +51,9 @@ for i, cat in enumerate(cats):
     for imgId in imgIds:
         filename = str(imgId).zfill(12) + '.jpg'
         img = cv2.imread(TRAIN_DIR + filename)
+        if img is None:
+            print('Missing img:', imgId)
+            continue
         # We only take the 1st annotation on the image
         annIds = coco.getAnnIds(imgIds=imgId, catIds=cat)
         if (len(annIds) == 0):
