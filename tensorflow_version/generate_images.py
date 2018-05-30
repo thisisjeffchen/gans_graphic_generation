@@ -6,6 +6,7 @@ from os.path import join
 import h5py
 import scipy.misc
 import os
+import shutil
 
 
 def main():
@@ -95,6 +96,8 @@ def main():
             caption_image_dic[cn] = caption_images
             print("Generated {} images for {}".format(cn, img_id))
         generated_images[img_id] = caption_image_dic
+
+    shutil.rmtree (save_dir)
 
     if not os.path.isdir(save_dir):
         os.mkdir(save_dir)
