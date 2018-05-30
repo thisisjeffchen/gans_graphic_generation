@@ -95,9 +95,10 @@ def main():
     sess = tf.InteractiveSession()
     tf.global_variables_initializer().run()
 
-    saver = tf.train.Saver()
+    checkpointer = tf.train.Saver()
+    perm_saver = tf.train.Saver(max_to_keep=None)
     if args.resume_model:
-        saver.restore(sess, args.resume_model)
+        checkpointer.restore(sess, args.resume_model)
 
     loaded_data = load_training_data('train', args.experiment)
 
@@ -150,7 +151,9 @@ def main():
             if (batch_no % args.save_every) == 0:
                 print("Saving Images, Model")
                 save_for_vis(args.experiment, real_images, gen, image_files)
-            saver.save(sess, "Data/Experiments/{}/model/checkpoint.ckpt".format(args.experiment), global_step=i)
+            checkpointer.save(sess, "Data/Experiments/{}/model/checkpoint.ckpt".format(args.experiment), global_step=i)
+            if i > 0 and (i % 100) == 0:
+                perm_saver.save(sess, "Data/Experiments/{}/model/after_{}_epochs.ckpt".format(args.experiment, i))
 
 
 def load_training_data(split, experiment):
