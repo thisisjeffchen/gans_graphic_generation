@@ -22,7 +22,7 @@ def main():
                         help='Text feature dimension')
 
     parser.add_argument('--image_size', type=int, default=64,
-                        help='Image Size')
+                        help='Image Size')        
 
     parser.add_argument('--gf_dim', type=int, default=64,
                         help='Number of conv in the first layer gen.')
@@ -97,12 +97,8 @@ def main():
             os.remove(f)
 
     for cn in range(0, len(caption_vectors)):
-        caption_images = []
         for i, im in enumerate(caption_image_dic[cn]):
-            caption_images.append(im)
-            caption_images.append(np.zeros((64, 5, 3)))
-        combined_image = np.concatenate(caption_images[0:-1], axis=1)
-        scipy.misc.imsave(join(save_dir, 'combined_image_{}.jpg'.format(cn)), combined_image)
+            scipy.misc.imsave(join(save_dir, '{}_image_{}_{}.jpg'.format(args.image_size, cn, chr (ord('A') + i))), im)
 
 
 if __name__ == '__main__':
