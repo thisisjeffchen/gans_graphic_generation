@@ -14,7 +14,7 @@ def main():
 
     args = parser.parse_args()
     
-    dest_path = os.path.join ("../results/", args.experiment)
+    dest_path = os.path.join ("..", "results", args.experiment)
     from_path = "Data/Experiments/{}/".format(args.experiment)
         
     try:
@@ -24,9 +24,10 @@ def main():
             raise
 
     #Copy over images
-    shutil.rmtree(os.path.join(dest_path, GEN_SAMPLES_DIR))
-    shutil.copytree (os.path.join (from_path, GEN_SAMPLES_DIR),
-                     os.path.join (dest_path, GEN_SAMPLES_DIR))
+    img_dest = os.path.join(dest_path, GEN_SAMPLES_DIR)
+    if os.path.exists(img_dest):
+        shutil.rmtree(img_dest)
+    shutil.copytree(os.path.join (from_path, GEN_SAMPLES_DIR), img_dest)
 
     #Copy over styled images
     complete_style_path = os.path.join(from_path, STYLE_SAMPLES_DIR)
