@@ -191,7 +191,7 @@ def style_transfer(content_image, style_image, output_image, image_size, style_s
         output_image = output_image[:-4]
 
     # Hardcoded handcrafted
-    for t in range(0, max_iter):
+    for t in range(0, max_iter+1):
         # Take an optimization step to update img_var
         sess.run(train_op)
         if t < decay_lr_at:
