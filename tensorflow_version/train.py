@@ -48,9 +48,6 @@ def main():
     parser.add_argument('--epochs', type=int, default=200,
                         help='Max number of epochs')
 
-    parser.add_argument('--save_every', type=int, default=30,
-                        help='Save Model/Samples every x iterations over batches')
-
     parser.add_argument('--resume_model', type=str, default=None,
                         help='Pre-Trained Model Path, to resume from')
 
@@ -58,10 +55,13 @@ def main():
                         help='Number of epochs already trained')
 
     parser.add_argument('--image_dir', type=str, default="Data/mscoco_raw/processed",
-                        help='Dat set: mscoco, flowers')
+                        help='Directory of image')
 
     parser.add_argument('--experiment', type=str, default="default",
                         help='Experiment to save to and load captions for')
+
+    parser.add_argument('--transfer', action='store_true',
+                        help='performs cropping and centering')
 
     args = parser.parse_args()
     model_options = {
@@ -97,6 +97,9 @@ def main():
 
     checkpointer = tf.train.Saver()
     perm_saver = tf.train.Saver(max_to_keep=None)
+
+    if args.transfer:
+        transfer_learning(sess, "Data/pretrained_flowers.ckpt")
     if args.resume_model:
         checkpointer.restore(sess, args.resume_model)
 
@@ -104,6 +107,7 @@ def main():
 
     for i in range(args.resume_epoch, args.epochs + 1):
         batch_no = 0
+        gen_images = None
         while batch_no * args.batch_size < loaded_data['data_length']:
             real_images, wrong_images, caption_vectors, z_noise, image_files = get_training_batch(batch_no,
                                                                                                   args.batch_size,
@@ -131,7 +135,7 @@ def main():
             g_loss = None
             for _ in range(args.gen_updates):
                 # GEN UPDATE
-                _, g_loss, gen = sess.run([g_optim, loss['g_loss'], outputs['generator']],
+                _, g_loss, gen_images = sess.run([g_optim, loss['g_loss'], outputs['generator']],
                                           feed_dict={
                                               input_tensors['t_real_image']: real_images,
                                               input_tensors['t_wrong_image']: wrong_images,
@@ -148,12 +152,34 @@ def main():
             tbwriter.add_summary(summary, global_step)
             print("Epoch", i, "LOSSES", d_loss, g_loss, batch_no, i, loaded_data['data_length'] / args.batch_size)
             batch_no += 1
-            if (batch_no % args.save_every) == 0:
-                print("Saving Images, Model")
-                save_for_vis(args.experiment, real_images, gen, image_files)
             checkpointer.save(sess, "Data/Experiments/{}/model/checkpoint.ckpt".format(args.experiment), global_step=i)
-            if i > 0 and (i % 100) == 0:
-                perm_saver.save(sess, "Data/Experiments/{}/model/after_{}_epochs.ckpt".format(args.experiment, i))
+        if i > 0 and (i % 100) == 0:
+            print("Saving Images, Model")
+            save_for_vis(args.experiment, gen_images)
+            perm_saver.save(sess, "Data/Experiments/{}/model/after_{}_epochs.ckpt".format(args.experiment, i))
+
+
+def transfer_learning(sess, path):
+    with tf.variable_scope("", reuse=True):
+        load_vars = {"d_h0_conv/biases": tf.get_variable("discriminator/d_h0_conv/biases"),
+                     "d_h0_conv/w": tf.get_variable("discriminator/d_h0_conv/w"),
+                     "d_h1_conv/biases": tf.get_variable("discriminator/d_h1_conv/biases"),
+                     "d_h1_conv/w": tf.get_variable("discriminator/d_h1_conv/w"),
+                     "d_bn1/beta": tf.get_variable("discriminator/d_bn1/beta"),
+                     "d_bn1/gamma": tf.get_variable("discriminator/d_bn1/gamma"),
+                     "g_bn0/beta": tf.get_variable("g_bn0/beta"),
+                     "g_bn0/gamma": tf.get_variable("g_bn0/gamma"),
+                     "g_bn1/beta": tf.get_variable("g_bn1/beta"),
+                     "g_bn1/gamma": tf.get_variable("g_bn1/gamma"),
+                     "g_embedding/Matrix": tf.get_variable("g_embedding/Matrix"),
+                     "g_embedding/bias": tf.get_variable("g_embedding/bias"),
+                     "g_h0_lin/Matrix": tf.get_variable("g_h0_lin/Matrix"),
+                     "g_h0_lin/bias": tf.get_variable("g_h0_lin/bias"),
+                     "g_h1/biases": tf.get_variable("g_h1/biases"),
+                     "g_h1/w": tf.get_variable("g_h1/w")
+                     }
+        saver = tf.train.Saver(load_vars)
+        saver.restore(sess, path)
 
 
 def load_training_data(split, experiment):
@@ -176,15 +202,12 @@ def load_training_data(split, experiment):
     }
 
 
-def save_for_vis(experiment, real_images, generated_images, image_files):
+def save_for_vis(experiment, generated_images):
     train_samples_path = "Data/Experiments/{}/train_samples".format(experiment)
     if not os.path.isdir(train_samples_path):
         os.makedirs(train_samples_path)
 
-    for i in range(0, real_images.shape[0]):
-        real_images_255 = (real_images[i, :, :, :])
-        scipy.misc.imsave(join(train_samples_path, '{}_{}.jpg'.format(i, os.path.split(os.path.splitext(image_files[i])[0])[-1])), real_images_255)
-
+    for i in range(0, generated_images.shape[0]):
         fake_images_255 = (generated_images[i, :, :, :])
         scipy.misc.imsave(join(train_samples_path, 'fake_image_{}.jpg'.format(i)), fake_images_255)
 

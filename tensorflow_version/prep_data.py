@@ -9,7 +9,7 @@ from pycocotools.coco import COCO
 
 NUM_BATCHES = 32
 
-def prep_data(data_dir, split, target_dir, experiment, category):
+def prep_data(data_dir, image_dir, split, target_dir, experiment, category):
     ANN_PATH = os.path.join(data_dir, "annotations/instances_" + split + "2017.json")
     CAP_PATH = os.path.join(data_dir, "annotations/captions_" + split + "2017.json")
     target_dir_experiment = os.path.join(target_dir, experiment)
@@ -40,7 +40,7 @@ def prep_data(data_dir, split, target_dir, experiment, category):
         if progress % 1000 == 0:
             print("Processsed {} out of {} for class {}".format(progress, len(imgIds), catId))
 
-        img_file = os.path.join(data_dir, "processed", class_name, "{}.jpg".format(str(i).zfill(12)))
+        img_file = os.path.join(image_dir, class_name, "{}.jpg".format(str(i).zfill(12)))
         if not os.path.isfile(img_file):
             print("Image {} not found".format(img_file))
             skipped_imgs += 1
@@ -101,6 +101,8 @@ def main():
                         help='train/val')
     parser.add_argument('--data_dir', type=str, default='Data/mscoco_raw/',
                         help='Data directory')
+    parser.add_argument('--image_dir', type=str, default="Data/mscoco_raw/processed",
+                        help='Directory of image')
     parser.add_argument('--experiment', type=str, default="default",
                         help='Experiment of dataset')
     parser.add_argument('--cat', type=str, default="cake",
@@ -109,7 +111,8 @@ def main():
 
     args = parser.parse_args()
 
-    image_captions, class_name = prep_data(args.data_dir, args.split, "Data/Experiments/", args.experiment, args.cat)
+    image_captions, class_name = prep_data(args.data_dir, args.image_dir, args.split,
+                                           "Data/Experiments/", args.experiment, args.cat)
     save_caption_vectors(image_captions, "Data/Experiments/", args.split, args.experiment, class_name)
 
 
