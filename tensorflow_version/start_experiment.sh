@@ -4,7 +4,7 @@
 #Second argument is category
 #Third argument is train image dir processed_segmented_cropped/processed_segmented
 #Last argument is 
-#Example: ./start_experiment.sh 5 train processed_segmented_segmented
+#Example: ./start_experiment.sh 5 elephant processed_segmented_cropped
 #screen -S gen_updates_5
 #screen -S 2329 -X sessionname my_session
 
