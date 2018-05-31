@@ -21,11 +21,15 @@ parser.add_argument('--tv_weight', type=float, default=5e-3,
 parser.add_argument('--content_weight', type=float, default=5e-2,
                     help='Experiment of dataset')
 
+parser.add_argument('--epoch', type=int, default=-1,
+                    help='Experiment of dataset')
+
 args = parser.parse_args()
 
 CONTENT_IMAGE_DIR = "./Data/Experiments/{}/gen_samples".format(args.experiment)
 STYLE_IMAGE_DIR = args.style_image_dir
 OUTPUT_DIR_ROOT = "./Data/Experiments/{}/styled_gen_samples".format(args.experiment)
+EPOCH = None if args.epoch == -1 else "epoch_"+str(args.epoch)
 
 def execute_style_transfer(content_image_path, style_image_path, output_image_path):
     params = {
@@ -60,11 +64,10 @@ def start_style_transfer(content_image_dir, style_image_dir, output_dir_root):
                         output_image_path=os.path.join(output_dir_style, content_file[:-4] + '_' + style_file),
                     )
                 elif os.path.isdir(os.path.join(content_image_dir, content_file)):
+                    if EPOCH is not None and content_file != EPOCH:
+                        continue
                     sub_content_image_dir = os.path.join(content_image_dir, content_file)
                     sub_output_dir_root = os.path.join(output_dir_root, content_file)
-                    print()
-                    print(sub_content_image_dir, sub_output_dir_root)
-                    print()
                     start_style_transfer(sub_content_image_dir, style_image_dir, sub_output_dir_root)
 
 print("Start style transfer")
