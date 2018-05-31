@@ -44,16 +44,16 @@ def execute_style_transfer(content_image_path, style_image_path, output_image_pa
 
 def start_style_transfer(content_image_dir, style_image_dir, output_dir_root):
     print("CONTENT IMAGE DIR IS:", content_image_dir)
-    if not os.path.exists(output_dir_root):
-        os.makedirs(output_dir_root)
     for style_file in os.listdir(style_image_dir):
         if style_file.endswith('.jpg'):
             print("Style transferring for", style_file)
             output_dir_style = os.path.join(output_dir_root, style_file[:-4])
-            if not os.path.exists(output_dir_style):
-                os.makedirs(output_dir_style)
             for content_file in os.listdir(content_image_dir):
                 if content_file.endswith('.jpg'):
+                    if not os.path.exists(output_dir_root):
+                        os.makedirs(output_dir_root)
+                    if not os.path.exists(output_dir_style):
+                        os.makedirs(output_dir_style)
                     execute_style_transfer(
                         content_image_path=os.path.join(content_image_dir, content_file),
                         style_image_path=os.path.join(style_image_dir, style_file),
