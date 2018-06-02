@@ -174,7 +174,7 @@ def style_transfer(content_image, style_image, output_image, image_size, style_s
     initial_lr = 3.0
     decayed_lr = 0.1
     decay_lr_at = 180
-    max_iter = 200
+    max_iter = 100
 
     # Create and initialize the Adam optimizer
     lr_var = tf.Variable(initial_lr, name="lr")
@@ -191,14 +191,14 @@ def style_transfer(content_image, style_image, output_image, image_size, style_s
         output_image = output_image[:-4]
 
     # Hardcoded handcrafted
-    for t in range(0, max_iter):
+    for t in range(0, max_iter+1):
         # Take an optimization step to update img_var
         sess.run(train_op)
         if t < decay_lr_at:
             sess.run(clamp_image_op)
         if t == decay_lr_at:
             sess.run(tf.assign(lr_var, decayed_lr))
-        if t % 50 == 0:
+        if t % 25 == 0:
             print('Iteration {}'.format(t))
             img = sess.run(img_var)
             cv2.imwrite(output_image + "_iter" + str(t) + ".jpg", deprocess_image(img[0]))
