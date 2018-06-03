@@ -233,12 +233,14 @@ def get_training_batch(batch_no, batch_size, image_size, z_dim,
 
         # Improve this selection of wrong image
         wrong_image_id = random.randint(0, len(loaded_data['image_list']) - 1)
-        wrong_image_file = join(processed_img_dir,  loaded_data['image_list'][wrong_image_id])
+        wrong_class_name, wrong_image_file_name = loaded_data['image_list'][wrong_image_id]
+        wrong_processed_img_dir = os.path.join(image_dir, wrong_class_name)
+        wrong_image_file = join(wrong_processed_img_dir, wrong_image_file_name)
         wrong_image_array = image_processing.load_image_array(wrong_image_file, image_size)
         wrong_images[cnt, :, :, :] = wrong_image_array
 
         random_caption = random.randint(0, 4)
-        captions[cnt, :] = loaded_data['captions'][loaded_data['image_list'][idx]][random_caption][
+        captions[cnt, :] = loaded_data['captions'][image_file_name][random_caption][
                            0:caption_vector_length]
         image_files.append(image_file)
         cnt += 1
