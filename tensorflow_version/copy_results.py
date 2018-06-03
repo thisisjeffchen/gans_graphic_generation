@@ -31,6 +31,9 @@ def main():
 
     #Copy over styled images
     complete_style_path = os.path.join(from_path, STYLE_SAMPLES_DIR)
+    if not os.path.exists(os.path.join(dest_path, STYLE_SAMPLES_DIR)):
+        os.mkdir(os.path.join(dest_path, STYLE_SAMPLES_DIR))
+
     if os.path.exists(complete_style_path):
         shutil.rmtree(os.path.join(dest_path, STYLE_SAMPLES_DIR))
         shutil.copytree(complete_style_path,
