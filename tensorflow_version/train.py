@@ -123,6 +123,7 @@ def main():
     for i in range(args.resume_epoch, args.epochs + 1):
         batch_no = 0
         gen_images = None
+        random.shuffle(loaded_data['image_list'])
         while batch_no * args.batch_size < loaded_data['data_length']:
             real_images, wrong_images, caption_vectors, z_noise, image_files = get_training_batch(batch_no,
                                                                                                   args.batch_size,
@@ -174,13 +175,16 @@ def main():
             perm_saver.save(sess, "Data/Experiments/{}/model/after_{}_epochs.ckpt".format(args.experiment, i))
 
 
+
+
 def load_training_data(split, experiment):
     h = h5py.File(os.path.join("Data", "Experiments", experiment, '{}_captions.hdf5'.format(split)))
-    class_name = list(h.keys())[0]
     captions = {}
-    for ds in h[class_name].items():
-        captions[ds[0]] = np.array(ds[1])
-    image_list = [key for key in captions]
+    image_list = []
+    for class_name in list(h.keys()):
+        for ds in h[class_name].items():
+            captions[ds[0]] = np.array(ds[1])
+            image_list += [(class_name, ds[0])]
 
     random.shuffle(image_list)
 
@@ -190,7 +194,6 @@ def load_training_data(split, experiment):
         'image_list': image_list,
         'captions': captions,
         'data_length': len(image_list),
-        'class_name': class_name
     }
 
 
@@ -207,7 +210,6 @@ def save_for_vis(experiment, generated_images):
 def get_training_batch(batch_no, batch_size, image_size, z_dim,
                        caption_vector_length, image_dir, loaded_data):
 
-    processed_img_dir = os.path.join(image_dir, loaded_data['class_name'])
 
     real_images = np.zeros((batch_size, 64, 64, 3))
     wrong_images = np.zeros((batch_size, 64, 64, 3))
@@ -217,18 +219,22 @@ def get_training_batch(batch_no, batch_size, image_size, z_dim,
     image_files = []
     for i in range(batch_no * batch_size, batch_no * batch_size + batch_size):
         idx = i % len(loaded_data['image_list'])
-        image_file = join(processed_img_dir, loaded_data['image_list'][idx])
+        class_name, image_file_name = loaded_data['image_list'][idx]
+        processed_img_dir = os.path.join(image_dir, class_name)
+        image_file = join(processed_img_dir, image_file_name)
         image_array = image_processing.load_image_array(image_file, image_size)
         real_images[cnt, :, :, :] = image_array
 
         # Improve this selection of wrong image
         wrong_image_id = random.randint(0, len(loaded_data['image_list']) - 1)
-        wrong_image_file = join(processed_img_dir,  loaded_data['image_list'][wrong_image_id])
+        wrong_class_name, wrong_image_file_name = loaded_data['image_list'][wrong_image_id]
+        wrong_processed_img_dir = os.path.join(image_dir, wrong_class_name)
+        wrong_image_file = join(wrong_processed_img_dir, wrong_image_file_name)
         wrong_image_array = image_processing.load_image_array(wrong_image_file, image_size)
         wrong_images[cnt, :, :, :] = wrong_image_array
 
         random_caption = random.randint(0, 4)
-        captions[cnt, :] = loaded_data['captions'][loaded_data['image_list'][idx]][random_caption][
+        captions[cnt, :] = loaded_data['captions'][image_file_name][random_caption][
                            0:caption_vector_length]
         image_files.append(image_file)
         cnt += 1
