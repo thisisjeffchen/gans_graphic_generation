@@ -44,6 +44,14 @@ def main():
 
     parser.add_argument('--epoch', type=int, default=None,
                         help='Epoch of the trained model to load. Defaults to latest checkpoint')
+    parser.add_argument('--transfer', action='store_true',
+                        help='does transfer learning')
+
+
+    parser.add_argument('--extra_32', action='store_true',
+                        help='extra conv layer when the image is at size 32')
+    parser.add_argument('--extra_64', action='store_true',
+                        help='extra conv layer when the image is at size 64')
 
     args = parser.parse_args()
     model_options = {

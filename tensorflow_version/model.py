@@ -134,8 +134,15 @@ class GAN:
         h3 = ops.deconv2d(h2, [self.options['batch_size'], s2, s2, self.options['gf_dim'] * 1], name='g_h3')
         h3 = tf.nn.relu(self.g_bn3(h3, train=False))
 
+        if self.options['extra_32']:
+            h3 = ops.deconv2d(h3, [self.options['batch_size'], s2, s2, self.options['gf_dim'] * 1], stride = 1, name = 'g_h3b')
+            h3 = tf.nn.relu (self.g_bn3b(h3))
+
         h4 = ops.deconv2d(h3, [self.options['batch_size'], s, s, 3], name='g_h4')
 
+        if self.options['extra_64']:
+            h4 = ops.deconv2d(h3, [self.options['batch_size'], s, s, 3], stride = 1, name = 'g_h4b')
+            
         return (tf.tanh(h4) / 2. + 0.5)
 
     # GENERATOR IMPLEMENTATION based on : https://github.com/carpedm20/DCGAN-tensorflow/blob/master/model.py
