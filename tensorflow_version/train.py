@@ -171,7 +171,7 @@ def load_training_data(split, experiment):
     for class_name in list(h.keys()):
         for ds in h[class_name].items():
             captions[ds[0]] = np.array(ds[1])
-        image_list += [(class_name, key) for key in captions]
+            image_list += [(class_name, ds[0])]
 
     random.shuffle(image_list)
 
