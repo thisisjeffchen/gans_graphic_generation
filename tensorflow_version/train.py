@@ -9,8 +9,6 @@ import scipy.misc
 import random
 import os
 
-from Utils.transfer_learning import transfer_learning
-
 
 def main():
     parser = argparse.ArgumentParser()
@@ -101,7 +99,7 @@ def main():
     perm_saver = tf.train.Saver(max_to_keep=None)
 
     if args.transfer:
-        transfer_learning(sess)
+        transfer_learning(sess, "Data/pretrained_flowers.ckpt")
     if args.resume_model:
         checkpointer.restore(sess, args.resume_model)
 
@@ -110,6 +108,7 @@ def main():
     for i in range(args.resume_epoch, args.epochs + 1):
         batch_no = 0
         gen_images = None
+        random.shuffle(loaded_data['image_list'])
         while batch_no * args.batch_size < loaded_data['data_length']:
             real_images, wrong_images, caption_vectors, z_noise, image_files = get_training_batch(batch_no,
                                                                                                   args.batch_size,
@@ -161,13 +160,37 @@ def main():
             perm_saver.save(sess, "Data/Experiments/{}/model/after_{}_epochs.ckpt".format(args.experiment, i))
 
 
+def transfer_learning(sess, path):
+    with tf.variable_scope("", reuse=True):
+        load_vars = {"d_h0_conv/biases": tf.get_variable("discriminator/d_h0_conv/biases"),
+                     "d_h0_conv/w": tf.get_variable("discriminator/d_h0_conv/w"),
+                     "d_h1_conv/biases": tf.get_variable("discriminator/d_h1_conv/biases"),
+                     "d_h1_conv/w": tf.get_variable("discriminator/d_h1_conv/w"),
+                     "d_bn1/beta": tf.get_variable("discriminator/d_bn1/beta"),
+                     "d_bn1/gamma": tf.get_variable("discriminator/d_bn1/gamma"),
+                     "g_bn0/beta": tf.get_variable("g_bn0/beta"),
+                     "g_bn0/gamma": tf.get_variable("g_bn0/gamma"),
+                     "g_bn1/beta": tf.get_variable("g_bn1/beta"),
+                     "g_bn1/gamma": tf.get_variable("g_bn1/gamma"),
+                     "g_embedding/Matrix": tf.get_variable("g_embedding/Matrix"),
+                     "g_embedding/bias": tf.get_variable("g_embedding/bias"),
+                     "g_h0_lin/Matrix": tf.get_variable("g_h0_lin/Matrix"),
+                     "g_h0_lin/bias": tf.get_variable("g_h0_lin/bias"),
+                     "g_h1/biases": tf.get_variable("g_h1/biases"),
+                     "g_h1/w": tf.get_variable("g_h1/w")
+                     }
+        saver = tf.train.Saver(load_vars)
+        saver.restore(sess, path)
+
+
 def load_training_data(split, experiment):
     h = h5py.File(os.path.join("Data", "Experiments", experiment, '{}_captions.hdf5'.format(split)))
-    class_name = list(h.keys())[0]
     captions = {}
-    for ds in h[class_name].items():
-        captions[ds[0]] = np.array(ds[1])
-    image_list = [key for key in captions]
+    image_list = []
+    for class_name in list(h.keys()):
+        for ds in h[class_name].items():
+            captions[ds[0]] = np.array(ds[1])
+        image_list += [(class_name, key) for key in captions]
 
     random.shuffle(image_list)
 
@@ -177,7 +200,6 @@ def load_training_data(split, experiment):
         'image_list': image_list,
         'captions': captions,
         'data_length': len(image_list),
-        'class_name': class_name
     }
 
 
@@ -194,7 +216,6 @@ def save_for_vis(experiment, generated_images):
 def get_training_batch(batch_no, batch_size, image_size, z_dim,
                        caption_vector_length, image_dir, loaded_data):
 
-    processed_img_dir = os.path.join(image_dir, loaded_data['class_name'])
 
     real_images = np.zeros((batch_size, 64, 64, 3))
     wrong_images = np.zeros((batch_size, 64, 64, 3))
@@ -204,7 +225,9 @@ def get_training_batch(batch_no, batch_size, image_size, z_dim,
     image_files = []
     for i in range(batch_no * batch_size, batch_no * batch_size + batch_size):
         idx = i % len(loaded_data['image_list'])
-        image_file = join(processed_img_dir, loaded_data['image_list'][idx])
+        class_name, image_file_name = loaded_data['image_list'][idx]
+        processed_img_dir = os.path.join(image_dir, class_name)
+        image_file = join(processed_img_dir, image_file_name)
         image_array = image_processing.load_image_array(image_file, image_size)
         real_images[cnt, :, :, :] = image_array
 
