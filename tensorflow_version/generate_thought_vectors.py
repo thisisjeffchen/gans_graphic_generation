@@ -18,22 +18,23 @@ def main():
 
     #copy over caption file into experiment directory
     h = h5py.File(os.path.join("Data", "Experiments", args.experiment, 'train_captions.hdf5'))
-    class_name = list(h.keys())[0]
+    class_names = list(h.keys())
     h.close ()
 
-    filename = class_name + ".txt"
-    src = os.path.join ("DefaultCaptions/", filename)
-    dst = os.path.join (data_dir, filename)
-    copyfile(src, dst)
-
-
-    in_caption_file = os.path.join(data_dir, filename)
     out_caption_file = os.path.join(data_dir, "gen_captions.hdf5")
 
-    with open(in_caption_file) as f:
-        captions = f.read().split('\n')
+    captions = []
+    for class_name in class_names:
+        filename = class_name + ".txt"
+        src = os.path.join ("DefaultCaptions/", filename)
+        dst = os.path.join (data_dir, filename)
+        copyfile(src, dst)
+        in_caption_file = os.path.join(data_dir, filename)
 
-    captions = [cap for cap in captions if len(cap) > 0]
+        with open(in_caption_file) as f:
+            captions_text = f.read().split('\n')
+            captions += [cap for cap in captions_text if len(cap) > 0]
+
     print(captions)
     model = skipthoughts.load_model()
     caption_vectors = skipthoughts.encode(model, captions)
