@@ -22,11 +22,14 @@ class GAN:
         self.g_bn1 = ops.batch_norm(name='g_bn1')
         self.g_bn2 = ops.batch_norm(name='g_bn2')
         self.g_bn3 = ops.batch_norm(name='g_bn3')
+        self.g_bn3b = ops.batch_norm(name='g_bn3b')
 
+        self.d_bn1a = ops.batch_norm(name='d_bn1a')
         self.d_bn1 = ops.batch_norm(name='d_bn1')
         self.d_bn2 = ops.batch_norm(name='d_bn2')
         self.d_bn3 = ops.batch_norm(name='d_bn3')
         self.d_bn4 = ops.batch_norm(name='d_bn4')
+
 
     def build_model(self):
         img_size = self.options['image_size']
@@ -137,13 +140,13 @@ class GAN:
 
     # GENERATOR IMPLEMENTATION based on : https://github.com/carpedm20/DCGAN-tensorflow/blob/master/model.py
     def generator(self, t_z, t_text_embedding):
-        s = self.options['image_size']
+        s = self.options['image_size'] #64 x 64
         s2, s4, s8, s16 = int(s / 2), int(s / 4), int(s / 8), int(s / 16)
 
-        reduced_text_embedding = ops.lrelu(ops.linear(t_text_embedding, self.options['t_dim'], 'g_embedding'))
-        z_concat = tf.concat([t_z, reduced_text_embedding], 1)
+        reduced_text_embedding = ops.lrelu(ops.linear(t_text_embedding, self.options['t_dim'], 'g_embedding')) #self.options['t_dim', 256]
+        z_concat = tf.concat([t_z, reduced_text_embedding], 1) #t_z is batch_size, z_dim, which is 100
         z_ = ops.linear(z_concat, self.options['gf_dim'] * 8 * s16 * s16, 'g_h0_lin')
-        h0 = tf.reshape(z_, [-1, s16, s16, self.options['gf_dim'] * 8])
+        h0 = tf.reshape(z_, [-1, s16, s16, self.options['gf_dim'] * 8]) #[-1, 4, 4, 64 * 8] gf_dim is number of filters in the first layer
         h0 = tf.nn.relu(self.g_bn0(h0))
 
         h1 = ops.deconv2d(h0, [self.options['batch_size'], s8, s8, self.options['gf_dim'] * 4], name='g_h1')
@@ -154,15 +157,27 @@ class GAN:
 
         h3 = ops.deconv2d(h2, [self.options['batch_size'], s2, s2, self.options['gf_dim'] * 1], name='g_h3')
         h3 = tf.nn.relu(self.g_bn3(h3))
+        if self.options['extra_32']:
+            h3 = ops.deconv2d(h3, [self.options['batch_size'], s2, s2, self.options['gf_dim'] * 1], stride = 1, name = 'g_h3b')
+            h3 = tf.nn.relu (self.g_bn3b(h3))
 
         h4 = ops.deconv2d(h3, [self.options['batch_size'], s, s, 3], name='g_h4')
+
+        if self.options['extra_64']:
+            h4 = ops.deconv2d(h3, [self.options['batch_size'], s, s, 3], stride = 1, name = 'g_h4b')
 
         return (tf.tanh(h4) / 2. + 0.5)
 
     # DISCRIMINATOR IMPLEMENTATION based on : https://github.com/carpedm20/DCGAN-tensorflow/blob/master/model.py
     def discriminator(self, image, t_text_embedding):
         with tf.variable_scope("discriminator", reuse=tf.AUTO_REUSE):
+            if self.options['extra_64']:
+                image = ops.lrelu (ops.lrelu(ops.conv2d(image, 3, stride = 1, name='d_h0a_conv')) )
+
             h0 = ops.lrelu(ops.conv2d(image, self.options['df_dim'], name='d_h0_conv'))  # 32
+
+            if self.options['extra_32']:
+                h0 = ops.lrelu(self.d_bn1a(ops.conv2d(h0, self.options['df_dim'], stride = 1, name='d_h1a_conv'))) 
             h1 = ops.lrelu(self.d_bn1(ops.conv2d(h0, self.options['df_dim'] * 2, name='d_h1_conv')))  # 16
             h2 = ops.lrelu(self.d_bn2(ops.conv2d(h1, self.options['df_dim'] * 4, name='d_h2_conv')))  # 8
             h3 = ops.lrelu(self.d_bn3(ops.conv2d(h2, self.options['df_dim'] * 8, name='d_h3_conv')))  # 4

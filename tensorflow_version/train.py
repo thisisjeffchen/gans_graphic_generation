@@ -63,7 +63,18 @@ def main():
                         help='Experiment to save to and load captions for')
 
     parser.add_argument('--transfer', action='store_true',
-                        help='performs cropping and centering')
+                        help='does transfer learning')
+
+    parser.add_argument('--split', type=str, default="train",
+                        help='use val for validation set, train for train\
+                        mostly a debug flag')
+
+    parser.add_argument('--extra_32', action='store_true',
+                        help='extra conv layer when the image is at size 32')
+    parser.add_argument('--extra_64', action='store_true',
+                        help='extra conv layer when the image is at size 64')
+
+
 
     args = parser.parse_args()
     model_options = {
@@ -74,7 +85,9 @@ def main():
         'gf_dim': args.gf_dim,
         'df_dim': args.df_dim,
         'gfc_dim': args.gfc_dim,
-        'caption_vector_length': args.caption_vector_length
+        'caption_vector_length': args.caption_vector_length,
+        'extra_32' : args.extra_32,
+        'extra_64' : args.extra_64
     }
 
     tbdir = "Data/Experiments/{}/".format(args.experiment)
@@ -105,7 +118,7 @@ def main():
     if args.resume_model:
         checkpointer.restore(sess, args.resume_model)
 
-    loaded_data = load_training_data('train', args.experiment)
+    loaded_data = load_training_data(args.split, args.experiment)
 
     for i in range(args.resume_epoch, args.epochs + 1):
         batch_no = 0
