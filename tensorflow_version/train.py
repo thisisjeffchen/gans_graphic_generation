@@ -129,6 +129,7 @@ def main():
         batch_no = 0
         gen_images = None
         random.shuffle(loaded_data['image_list'])
+        print(loaded_data['data_length'])
         while batch_no * args.batch_size < loaded_data['data_length']:
             real_images, wrong_images, caption_vectors, z_noise, image_files = get_training_batch(batch_no,
                                                                                                   args.batch_size,
