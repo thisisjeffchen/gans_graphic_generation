@@ -141,8 +141,8 @@ class GAN:
         h4 = ops.deconv2d(h3, [self.options['batch_size'], s, s, 3], name='g_h4')
 
         if self.options['extra_64']:
-            h4 = ops.deconv2d(h3, [self.options['batch_size'], s, s, 3], stride = 1, name = 'g_h4b')
-            
+            h4 = ops.deconv2d(h4, [self.options['batch_size'], s, s, 3], stride = 1, name = 'g_h4b')
+
         return (tf.tanh(h4) / 2. + 0.5)
 
     # GENERATOR IMPLEMENTATION based on : https://github.com/carpedm20/DCGAN-tensorflow/blob/master/model.py
@@ -171,7 +171,7 @@ class GAN:
         h4 = ops.deconv2d(h3, [self.options['batch_size'], s, s, 3], name='g_h4')
 
         if self.options['extra_64']:
-            h4 = ops.deconv2d(h3, [self.options['batch_size'], s, s, 3], stride = 1, name = 'g_h4b')
+            h4 = ops.deconv2d(h4, [self.options['batch_size'], s, s, 3], stride = 1, name = 'g_h4b')
 
         return (tf.tanh(h4) / 2. + 0.5)
 
