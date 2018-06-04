@@ -47,7 +47,6 @@ def main():
     parser.add_argument('--transfer', action='store_true',
                         help='does transfer learning')
 
-
     parser.add_argument('--extra_32', action='store_true',
                         help='extra conv layer when the image is at size 32')
     parser.add_argument('--extra_64', action='store_true',
@@ -62,7 +61,9 @@ def main():
         'gf_dim': args.gf_dim,
         'df_dim': args.df_dim,
         'gfc_dim': args.gfc_dim,
-        'caption_vector_length': args.caption_vector_length
+        'caption_vector_length': args.caption_vector_length,
+        'extra_32' : args.extra_32,
+        'extra_64' : args.extra_64
     }
 
     data_dir = os.path.join("Data", "Experiments", "{}".format(args.experiment))
