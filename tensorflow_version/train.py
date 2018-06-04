@@ -73,10 +73,14 @@ def main():
                         help='extra conv layer when the image is at size 32')
     parser.add_argument('--extra_64', action='store_true',
                         help='extra conv layer when the image is at size 64')
+    parser.add_argument('--vgg', action='store_true',
+                        help='use vgg like layout')
 
-
-
+    
     args = parser.parse_args()
+    if args.vgg and (args.extra_32 or args.extra_64):
+        raise Exception ("Cannot perform both vgg and extra_x mods at the same time")
+
     model_options = {
         'z_dim': args.z_dim,
         't_dim': args.t_dim,
@@ -87,7 +91,8 @@ def main():
         'gfc_dim': args.gfc_dim,
         'caption_vector_length': args.caption_vector_length,
         'extra_32' : args.extra_32,
-        'extra_64' : args.extra_64
+        'extra_64' : args.extra_64,
+        'vgg'      : args.vgg
     }
 
     tbdir = "Data/Experiments/{}/".format(args.experiment)
