@@ -13,7 +13,7 @@ CAT=$2
 IMAGEDIR=$3
 DATE=`date +%Y%m%d`
 
-python3 prep_data.py --experiment=${DATE}_${CAT}_${IMAGEDIR}_$4_07_epochs_1000_batch_size_256_gen_updates_${GEN_UPDATES} --cat=${CAT}
-python3 train.py  --experiment=${DATE}_${CAT}_${IMAGEDIR}_$4_07_epochs_1000_batch_size_256_gen_updates_${GEN_UPDATES} --epochs=1000 --gen_updates=${GEN_UPDATES} --image_dir=Data/mscoco_raw/${IMAGEDIR} --batch_size=256 $4
+python3 prep_data.py --experiment=${DATE}_${CAT}_${IMAGEDIR}_07_epochs_1000_batch_size_256_gen_updates_${GEN_UPDATES} --cat=${CAT}  --image_dir=Data/mscoco_raw/${IMAGEDIR}
+python3 train.py  --experiment=${DATE}_${CAT}_${IMAGEDIR}_07_epochs_1000_batch_size_256_gen_updates_${GEN_UPDATES} --epochs=1000 --gen_updates=${GEN_UPDATES} --image_dir=Data/mscoco_raw/${IMAGEDIR} --batch_size=256
 
 
