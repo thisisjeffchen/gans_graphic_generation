@@ -16,6 +16,9 @@ def load_image_array(image_file, image_size):
         img_new[:, :, 2] = img
         img = img_new
 
+    if img.shape[2] == 4:
+        img = img[:, :, :3]
+
     img_resized = skimage.transform.resize(img, (image_size, image_size))
 
     # FLIP HORIZONTAL WIRH A PROBABILITY 0.5

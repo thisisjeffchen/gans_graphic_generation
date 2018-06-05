@@ -42,6 +42,7 @@ class GAN:
         t_real_image = tf.placeholder('float32', [self.options['batch_size'], img_size, img_size, 3], name='real_image')
         t_wrong_image = tf.placeholder('float32', [self.options['batch_size'], img_size, img_size, 3],
                                        name='wrong_image')
+        t_style_image = tf.placeholder('float32', [self.options['batch_size'], img_size, img_size, 3], name='style_image')
         t_real_caption = tf.placeholder('float32', [self.options['batch_size'], self.options['caption_vector_length']],
                                         name='real_caption_input')
         t_z = tf.placeholder('float32', [self.options['batch_size'], self.options['z_dim']])
@@ -52,8 +53,17 @@ class GAN:
         disc_wrong_image, disc_wrong_image_logits = self.discriminator(t_wrong_image, t_real_caption)
         disc_fake_image, disc_fake_image_logits = self.discriminator(fake_image, t_real_caption)
 
-        g_loss = tf.reduce_mean(
+        style_real_image, style_real_image_logits = self.style_discriminator(t_style_image)
+        style_wrong_image, style_wrong_image_logits = self.style_discriminator(t_wrong_image)
+        style_fake_image, style_fake_image_logits = self.style_discriminator(fake_image)
+
+        g_loss_content = tf.reduce_mean(
             tf.nn.sigmoid_cross_entropy_with_logits(logits=disc_fake_image_logits, labels=tf.ones_like(disc_fake_image)))
+        g_loss_style = tf.reduce_mean(
+            tf.nn.sigmoid_cross_entropy_with_logits(logits=style_fake_image_logits, labels=tf.ones_like(disc_fake_image)))
+
+        g_loss = g_loss_content + g_loss_style
+
 
         d_loss1 = tf.reduce_mean(
             tf.nn.sigmoid_cross_entropy_with_logits(logits=disc_real_image_logits, labels=tf.ones_like(disc_real_image)))
@@ -64,25 +74,41 @@ class GAN:
 
         d_loss = d_loss1 + d_loss2 + d_loss3
 
+        s_loss_real = tf.reduce_mean(
+            tf.nn.sigmoid_cross_entropy_with_logits(logits=style_real_image_logits,
+                                                    labels=tf.ones_like(style_real_image)))
+        s_loss_wrong = tf.reduce_mean(
+            tf.nn.sigmoid_cross_entropy_with_logits(logits=style_wrong_image_logits,
+                                                    labels=tf.zeros_like(style_wrong_image)))
+        s_loss_fake = tf.reduce_mean(
+            tf.nn.sigmoid_cross_entropy_with_logits(logits=style_fake_image_logits,
+                                                    labels=tf.zeros_like(style_fake_image)))
+
+        s_loss = s_loss_real + s_loss_wrong + s_loss_fake
+
         t_vars = tf.trainable_variables()
         d_vars = [var for var in t_vars if 'd_' in var.name]
+        s_vars = [var for var in t_vars if 's_' in var.name]
         g_vars = [var for var in t_vars if 'g_' in var.name]
 
         input_tensors = {
             't_real_image': t_real_image,
             't_wrong_image': t_wrong_image,
+            't_style_image': t_style_image,
             't_real_caption': t_real_caption,
             't_z': t_z
         }
 
         variables = {
             'd_vars': d_vars,
+            's_vars': s_vars,
             'g_vars': g_vars
         }
 
         loss = {
             'g_loss': g_loss,
-            'd_loss': d_loss
+            'd_loss': d_loss,
+            's_loss': s_loss
         }
 
         outputs = {
@@ -93,9 +119,17 @@ class GAN:
             'd_loss1': d_loss1,
             'd_loss2': d_loss2,
             'd_loss3': d_loss3,
+            's_loss_real': s_loss_real,
+            's_loss_wrong': s_loss_wrong,
+            's_loss_fake': s_loss_fake,
+            'g_loss_content': g_loss_content,
+            'g_loss_style': g_loss_style,
             'disc_real_image_logits': disc_real_image_logits,
             'disc_wrong_image_logits': disc_wrong_image,
-            'disc_fake_image_logits': disc_fake_image_logits
+            'disc_fake_image_logits': disc_fake_image_logits,
+            'style_real_image_logits': style_real_image_logits,
+            'style_wrong_image_logits': style_wrong_image_logits,
+            'style_fake_image_logits': style_fake_image_logits
         }
 
         return input_tensors, variables, loss, outputs, checks
@@ -253,14 +287,47 @@ class GAN:
                 h1 = ops.lrelu(self.d_bn1(ops.conv2d(h0, self.options['df_dim'] * 2, name='d_h1_conv')))  # 16
                 h2 = ops.lrelu(self.d_bn2(ops.conv2d(h1, self.options['df_dim'] * 4, name='d_h2_conv')))  # 8
                 h3 = ops.lrelu(self.d_bn3(ops.conv2d(h2, self.options['df_dim'] * 8, name='d_h3_conv')))  # 4
-    
+
             # ADD TEXT EMBEDDING TO THE NETWORK
             reduced_text_embeddings = ops.lrelu(ops.linear(t_text_embedding, self.options['t_dim'], 'd_embedding'))
             reduced_text_embeddings = tf.expand_dims(reduced_text_embeddings, 1)
             reduced_text_embeddings = tf.expand_dims(reduced_text_embeddings, 2)
-            tiled_embeddings = tf.tile(reduced_text_embeddings, [1, 4, 4, 1], name='tiled_embeddings') 
+            tiled_embeddings = tf.tile(reduced_text_embeddings, [1, 4, 4, 1], name='tiled_embeddings')
             h3_concat = tf.concat([h3, tiled_embeddings], 3, name='h3_concat')
             h3_new = ops.lrelu(
-                self.d_bn4(ops.conv2d(h3_concat, self.options['df_dim'] * 8, 1, 1, 1, 1, name='d_h3_conv_new')))  # 4  
+                self.d_bn4(ops.conv2d(h3_concat, self.options['df_dim'] * 8, 1, 1, 1, 1, name='d_h3_conv_new')))  # 4
             h4 = ops.linear(tf.reshape(h3_new, [self.options['batch_size'], -1]), 1, 'd_h3_lin')   
             return tf.nn.sigmoid(h4), h4
+
+    def style_discriminator(self, image):
+        with tf.variable_scope("style_discriminator", reuse=tf.AUTO_REUSE):
+
+            if self.options['vgg']:
+                h0 = ops.lrelu(ops.conv2d(image, 3, stride=1, name='s_h0a_conv'))
+                h0 = ops.lrelu(ops.conv2d(h0, 3, stride=2, name='s_h0_conv'))
+
+                h1 = ops.lrelu(self.d_bn1a(ops.conv2d(h0, self.options['df_dim'] * 2, stride=1, name='s_h1a_conv')))
+                h1 = ops.lrelu(self.d_bn1(ops.conv2d(h0, self.options['df_dim'] * 2, stride=2, name='s_h1_conv')))
+
+                h2 = ops.lrelu(self.d_bn2a(ops.conv2d(h1, self.options['df_dim'] * 4, stride=1, name='s_h2a_conv')))
+                h2 = ops.lrelu(self.d_bn2(ops.conv2d(h2, self.options['df_dim'] * 4, stride=2, name='s_h2_conv')))
+
+                h3 = ops.lrelu(self.d_bn3a(ops.conv2d(h2, self.options['df_dim'] * 8, stride=1, name='s_h3a_conv')))
+                h3 = ops.lrelu(self.d_bn3(ops.conv2d(h3, self.options['df_dim'] * 8, stride=2, name='s_h3_conv')))
+
+            else:
+                if self.options['extra_64']:
+                    image = ops.lrelu(ops.conv2d(image, 3, stride=1, name='s_h0a_conv'))
+
+                h0 = ops.lrelu(ops.conv2d(image, self.options['df_dim'], name='s_h0_conv'))  # 32
+
+                if self.options['extra_32']:
+                    h0 = ops.lrelu(self.d_bn1a(ops.conv2d(h0, self.options['df_dim'], stride=1, name='s_h1a_conv')))
+                h1 = ops.lrelu(self.d_bn1(ops.conv2d(h0, self.options['df_dim'] * 2, name='s_h1_conv')))  # 16
+                h2 = ops.lrelu(self.d_bn2(ops.conv2d(h1, self.options['df_dim'] * 4, name='s_h2_conv')))  # 8
+                h3 = ops.lrelu(self.d_bn3(ops.conv2d(h2, self.options['df_dim'] * 8, name='s_h3_conv')))  # 4
+
+
+            h4 = ops.linear(tf.reshape(h3, [self.options['batch_size'], -1]), 1, 's_h3_lin')
+            return tf.nn.sigmoid(h4), h4
+
