@@ -1,6 +1,10 @@
 import tensorflow as tf
 from Utils import ops
 
+# add style transfer
+import sys
+sys.path.insert(0, './style_transfer_utils')
+from style_transfer_utils import gan_style_loss
 
 class GAN:
     '''
@@ -54,6 +58,12 @@ class GAN:
 
         g_loss = tf.reduce_mean(
             tf.nn.sigmoid_cross_entropy_with_logits(logits=disc_fake_image_logits, labels=tf.ones_like(disc_fake_image)))
+
+
+	# style code ------------------------------------------------------
+	# TODO: weigh down this style loss, and see if it's the correct metric
+        g_loss += gan_style_loss(fake_image)
+	# end style code --------------------------------------------------
 
         d_loss1 = tf.reduce_mean(
             tf.nn.sigmoid_cross_entropy_with_logits(logits=disc_real_image_logits, labels=tf.ones_like(disc_real_image)))
