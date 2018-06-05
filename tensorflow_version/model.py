@@ -62,7 +62,8 @@ class GAN:
 
 	# style code ------------------------------------------------------
 	# TODO: weigh down this style loss, and see if it's the correct metric
-        g_loss += gan_style_loss(fake_image)
+        if self.options['style_gan']:
+            g_loss += gan_style_loss(fake_image)
 	# end style code --------------------------------------------------
 
         d_loss1 = tf.reduce_mean(
