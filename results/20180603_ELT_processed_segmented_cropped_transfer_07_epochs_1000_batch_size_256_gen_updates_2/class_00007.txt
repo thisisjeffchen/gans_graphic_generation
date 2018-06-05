@@ -28,3 +28,11 @@ A yellow and red train coming into the station
 A round train with lots of passengers
 A train with yellow and red lights
 A train without a roof
+A red elephant
+A orange train
+A blue train
+A green train
+A yellow train
+A brown train
+A purple train
+A white train

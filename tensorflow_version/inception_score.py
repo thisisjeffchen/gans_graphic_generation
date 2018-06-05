@@ -40,7 +40,7 @@ def walk_dir(dir, split):
 
 
     with open('../results/inception_score.csv', 'w') as f:
-        w = csv.DictWriter(f, list(columns))
+        w = csv.DictWriter(f, sorted(list(columns)))
         w.writeheader()
         w.writerows(rows)
 
