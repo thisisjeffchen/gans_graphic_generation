@@ -133,19 +133,19 @@ class GAN:
 
         if self.options['vgg']:
             h1 = ops.deconv2d(h0, [self.options['batch_size'], s8, s8, self.options['gf_dim'] * 4], stride = 2, name='g_h1') #8
-            h1 = tf.nn.relu(self.g_bn1(h1))
+            h1 = tf.nn.relu(self.g_bn1(h1, train=False))
             h1 = ops.deconv2d(h1, [self.options['batch_size'], s8, s8, self.options['gf_dim'] * 4], stride = 1, name='g_h1b')
-            h1 = tf.nn.relu(self.g_bn1b(h1))
+            h1 = tf.nn.relu(self.g_bn1b(h1, train=False))
 
             h2 = ops.deconv2d(h1, [self.options['batch_size'], s4, s4, self.options['gf_dim'] * 2], stride = 2, name='g_h2') #16
-            h2 = tf.nn.relu(self.g_bn2(h2))
+            h2 = tf.nn.relu(self.g_bn2(h2, train=False))
             h2 = ops.deconv2d(h2, [self.options['batch_size'], s4, s4, self.options['gf_dim'] * 2], stride = 1, name='g_h2b')
-            h2 = tf.nn.relu(self.g_bn2b(h2))
+            h2 = tf.nn.relu(self.g_bn2b(h2, train=False))
 
             h3 = ops.deconv2d(h2, [self.options['batch_size'], s2, s2, self.options['gf_dim'] * 1], stride = 2, name='g_h3') #32
-            h3 = tf.nn.relu(self.g_bn3(h3))
+            h3 = tf.nn.relu(self.g_bn3(h3, train=False))
             h3 = ops.deconv2d(h3, [self.options['batch_size'], s2, s2, self.options['gf_dim'] * 1], stride = 1, name='g_h3b')
-            h3 = tf.nn.relu(self.g_bn3b(h3))
+            h3 = tf.nn.relu(self.g_bn3b(h3, train=False))
 
             h4 = ops.deconv2d(h3, [self.options['batch_size'], s, s, 3], stride = 2, name='g_h4') #64
             h4 = ops.deconv2d(h4, [self.options['batch_size'], s, s, 3], stride = 1, name='g_h4b')
@@ -164,7 +164,7 @@ class GAN:
     
             if self.options['extra_32']:
                 h3 = ops.deconv2d(h3, [self.options['batch_size'], s2, s2, self.options['gf_dim'] * 1], stride = 1, name = 'g_h3b')
-                h3 = tf.nn.relu (self.g_bn3b(h3))
+                h3 = tf.nn.relu (self.g_bn3b(h3, train=False))
     
             h4 = ops.deconv2d(h3, [self.options['batch_size'], s, s, 3], name='g_h4')
     
