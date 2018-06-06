@@ -112,6 +112,8 @@ def main():
 
     d_optim = tf.train.AdamOptimizer(args.learning_rate, beta1=args.beta1).minimize(loss['d_loss'],
                                                                                     var_list=variables['d_vars'])
+    s_optim = tf.train.AdamOptimizer(args.learning_rate, beta1=args.beta1).minimize(loss['s_loss'],
+                                                                                    var_list=variables['s_vars'])
     g_optim = tf.train.AdamOptimizer(args.learning_rate, beta1=args.beta1).minimize(loss['g_loss'],
                                                                                     var_list=variables['g_vars'])
 
@@ -161,7 +163,7 @@ def main():
 
             # STYLE UPDATE
             check_ts = [checks['s_loss_real'], checks['s_loss_wrong'], checks['s_loss_fake']]
-            _, s_loss, gen, s1, s2, s3 = sess.run([d_optim, loss['s_loss'], outputs['generator']] + check_ts,
+            _, s_loss, gen, s1, s2, s3 = sess.run([s_optim, loss['s_loss'], outputs['generator']] + check_ts,
                                                   feed_dict={
                                                       input_tensors['t_real_image']: real_images,
                                                       input_tensors['t_style_image']: style_images,
