@@ -62,6 +62,9 @@ def main():
     parser.add_argument('--experiment', type=str, default="default",
                         help='Experiment to save to and load captions for')
 
+    parser.add_argument('--style_gan', type=bool, default=False,
+                        help='adds style loss to generator loss')
+
     parser.add_argument('--transfer', action='store_true',
                         help='does transfer learning')
 
@@ -92,7 +95,8 @@ def main():
         'caption_vector_length': args.caption_vector_length,
         'extra_32' : args.extra_32,
         'extra_64' : args.extra_64,
-        'vgg'      : args.vgg
+        'vgg'      : args.vgg,
+        'style_gan': args.style_gan
     }
 
     tbdir = "Data/Experiments/{}/".format(args.experiment)

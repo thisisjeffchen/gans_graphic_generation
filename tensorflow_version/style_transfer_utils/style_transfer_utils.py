@@ -68,8 +68,8 @@ def gram_matrix(features, normalize=True):
       Gram matrices for the input image.
     """
     features_shape = tf.shape(features)
-    flattened_features = tf.reshape(features, [features_shape[1] * features_shape[2], features_shape[3]])
-    mult = tf.matmul(tf.transpose(flattened_features), flattened_features)
+    flattened_features = tf.reshape(features, [-1, features_shape[1] * features_shape[2], features_shape[3]])
+    mult = tf.matmul(tf.transpose(flattened_features, perm=[0,2,1]), flattened_features)
     if normalize:
         mult = tf.scalar_mul(tf.reciprocal(tf.cast(features_shape[1]*features_shape[2]*features_shape[3], tf.float32)), mult)
     return mult
@@ -202,3 +202,62 @@ def style_transfer(content_image, style_image, output_image, image_size, style_s
             print('Iteration {}'.format(t))
             img = sess.run(img_var)
             cv2.imwrite(output_image + "_iter" + str(t) + ".jpg", deprocess_image(img[0]))
+
+def tf_preprocess_image(image):
+    SQUEEZENET_MEAN = tf.constant([0.485, 0.456, 0.406], dtype=tf.float32)
+    SQUEEZENET_STD = tf.constant([0.229, 0.224, 0.225], dtype=tf.float32)
+    return tf.divide(tf.divide(image, 255.0) - SQUEEZENET_MEAN, SQUEEZENET_STD)
+
+def gram_matrix_batched(features, normalize=True):
+    """
+    Compute the Gram matrix from features.
+
+    Inputs:
+    - features: Tensor of shape (N, H, W, C) giving features for
+      a single image.
+    - normalize: optional, whether to normalize the Gram matrix
+        If True, divide the Gram matrix by the number of neurons (H * W * C)
+
+    Returns:
+    - gram: Tensor of shape (N, C, C) giving the (optionally normalized)
+      Gram matrices for the input image.
+    """
+    features_shape = tf.shape(features)
+    features_T = tf.transpose(features, perm=[0, 3, 2, 1])
+    mult = tf.batch_matmul(features_T, features)
+    if normalize:
+        mult = tf.scalar_mul(tf.reciprocal(tf.cast(features_shape[1]*features_shape[2]*features_shape[3], tf.float32)), mult)
+    return mult
+
+
+style_layers = [1, 4, 6, 7]
+style_weights = [2000000, 800, 12, 1]
+style_feats = model.extract_features(model.image)
+# TODO: make this a dynamic tensor
+style_img = preprocess_image(load_image('./styles/van_gogh.jpg'))
+style_feat_vars = [style_feats[idx] for idx in [1, 4, 6, 7]]
+style_target_vars = []
+# Compute list of TensorFlow Gram matrices
+for style_feat_var in style_feat_vars:
+	style_target_vars.append(gram_matrix(style_feat_var))
+# Compute list of NumPy Gram matrices by evaluating the TensorFlow graph on the style image
+style_targets = sess.run(style_target_vars, {model.image: style_img[None]})
+
+def gan_style_loss(gan_output_image):
+    # preprocess the gan image per the constants in cs231n/image_utils
+    processed_gan_img = tf_preprocess_image(gan_output_image)
+    gan_img_feats = model.extract_features(processed_gan_img)
+
+    loss = tf.constant(0, tf.float32)
+    for i in range(len(style_layers)):
+        loss += tf.scalar_mul(style_weights[i], \
+                  tf.reduce_sum(tf.square(style_targets[i] - gram_matrix(gan_img_feats[style_layers[i]]))))
+    return loss
+
+
+
+
+
+
+
+
